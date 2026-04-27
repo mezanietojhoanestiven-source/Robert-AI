@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- SEO -->
+  <title>Robert: Detector de Estafas | Analiza mensajes sospechosos al instante</title>
+  <meta name="description" content="Analiza mensajes de WhatsApp, Telegram, SMS y links sospechosos. Robert detecta estafas con IA avanzada y te muestra qué pasará si caes. ¡Compártelo!" />
+  <meta name="keywords" content="detector estafas, scam detector, WhatsApp estafa, fraude, seguridad digital" />
+  
+  <!-- Open Graph / Social -->
+  <meta property="og:title" content="Robert: Detector de Estafas 🚨" />
+  <meta property="og:description" content="Pegá el mensaje sospechoso y descubrí si es una estafa. Resultado impactante." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/og-image.png" />
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Robert: Detector de Estafas 🚨" />
+  <meta name="twitter:description" content="Analiza mensajes sospechosos al instante con IA." />
+  
+  <!-- Favicon -->
+  <link rel="icon" href="/logo.png" />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  
+  <!-- Google AdSense (Reemplaza los 0 por tu ID de publisher 'ca-pub-...') -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0000000000000000" crossorigin="anonymous"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="/styles/main.css" />
+</head>
+<body>
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- FONDO ANIMADO PARTÍCULAS                        -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- HEADER                                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <header id="main-header">
+    <div class="header-content">
+      <div class="logo" id="logo">
+        <img src="/logo.png" alt="Robert Logo" class="logo-image">
+        <div class="logo-text">
+          <h1>Robert</h1>
+          <span class="logo-subtitle">Detector de Estafas</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-donate" class="btn-outline-glow">❤️ Donar</button>
+        <button id="btn-about" class="btn-outline-glow" style="margin-left: 10px;">👤 Sobre mí</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- HERO / INPUT SECTION                            -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <main>
+    <section id="hero-section" class="section">
+      <div class="container">
+        <h2 class="hero-title">
+          ¿Te enviaron un <span class="text-gradient">mensaje sospechoso</span>?
+        </h2>
+        <p class="hero-subtitle">
+          Pega el mensaje, link o conversación. Robert lo analiza con IA avanzada 
+          y te muestra <strong>exactamente qué pasará</strong> si caes.
+        </p>
+        
+        <!-- INPUT AREA -->
+        <div class="input-container" id="input-container">
+          <div class="input-tabs">
+            <button class="input-tab active" data-tab="images" id="tab-images">
+              📸 Capturas
+            </button>
+            <button class="input-tab" data-tab="link" id="tab-link">
+              📝 Texto o Link
+            </button>
+            <button class="input-tab tab-victim" data-tab="victim" id="tab-victim">
+              🚨 Fui Estafado
+            </button>
+          </div>
+          <div class="textarea-wrapper" id="text-input-wrapper" style="display: none;">
+            <textarea 
+              id="message-input" 
+              placeholder="Pega aquí el texto sospechoso (ej: mensaje de Telegram) o el link…"
+              rows="4"
+            ></textarea>
+          </div>
+          <div class="image-upload-wrapper" id="image-upload-wrapper">
+            <label for="image-upload" class="upload-area" id="upload-area">
+              <span class="upload-icon">📸</span>
+              <span class="upload-text">Toca aquí para seleccionar hasta 6 capturas de pantalla</span>
+              <input type="file" id="image-upload" multiple accept="image/png, image/jpeg, image/webp" style="opacity: 0; position: absolute; z-index: -1; width: 0.1px; height: 0.1px;">
+            </label>
+            <div class="image-preview-container" id="image-preview-container"></div>
+          </div>
+          
+          <div class="victim-upload-wrapper" id="victim-upload-wrapper" style="display: none;">
+            <div class="victim-form">
+              <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.9rem;">
+                Si ya fuiste víctima, ingresa los datos del estafador. Robert compilará un Rastreo Geográfico Oficial (OSINT) que podrás imprimir o llevar a las autoridades policiales.
+              </p>
+              <div class="form-group">
+                <label for="victim-phone">📞 Teléfono del Estafador (con indicativo)</label>
+                <input type="text" id="victim-phone" placeholder="Ej: +57 320...">
+              </div>
+              <div class="form-group">
+                <label for="victim-handle">🌐 Cuenta, @Usuario o Link (Opcional)</label>
+                <input type="text" id="victim-handle" placeholder="Ej: @InversionesCrypto, https://...">
+              </div>
+              
+              <div class="form-group exif-group">
+                <label for="victim-photo">📸 Foto enviada por el estafador (opcional)</label>
+                <p style="font-size:0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                  Si el estafador te envió una foto tomada con su celular, Robert buscará las coordenadas GPS reales dentro de la imagen.
+                </p>
+                <label for="victim-photo" class="exif-upload-label" id="exif-upload-label">
+                  <span class="exif-upload-icon">🖼️</span>
+                  <span id="exif-upload-text">Toca para subir la foto del estafador</span>
+                  <input type="file" id="victim-photo" accept="image/jpeg,image/jpg,image/tiff" style="display:none;">
+                </label>
+              </div>
+            </div>
+          </div>
+          <button id="analyze-btn" class="btn-primary btn-analyze">
+            <span class="btn-icon">🔍</span>
+            <span class="btn-text">Analizar ahora</span>
+            <span class="btn-arrow">→</span>
+          </button>
+          
+          <div class="privacy-notice">
+            <span class="privacy-icon">🔒</span>
+            <p><strong>Privacidad:</strong> Tus mensajes <strong>no se almacenan</strong> ni se usan para entrenar IA. Si la IA confirma una estafa, los identificadores (teléfonos, links) son guardados en la <strong>lista negra compartida de Robert</strong> para proteger a otras personas.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ESPACIO PUBLICITARIO 1 (Debajo del buscador) -->
+    <div class="ad-container" style="text-align: center; margin: 20px auto; width: 100%; max-width: 728px; min-height: 90px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-0000000000000000"
+           data-ad-slot="0000000000"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+           (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- LOADING / ANÁLISIS ANIMATION                   -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="loading-section" class="section hidden">
+      <div class="container">
+        <div class="loading-container">
+          <div class="scanner-ring">
+            <div class="scanner-inner">
+              <span class="scanner-icon">🔍</span>
+            </div>
+          </div>
+          <h3 class="loading-title">Analizando mensaje…</h3>
+          <div class="loading-steps">
+            <div class="loading-step" id="step-1">
+              <span class="step-icon">⏳</span>
+              <span class="step-text">Escaneando patrones de estafa…</span>
+            </div>
+            <div class="loading-step" id="step-2">
+              <span class="step-icon">⏳</span>
+              <span class="step-text">Verificando base de datos de fraudes…</span>
+            </div>
+            <div class="loading-step" id="step-3">
+              <span class="step-icon">⏳</span>
+              <span class="step-text">Analizando manipulación emocional…</span>
+            </div>
+            <div class="loading-step" id="step-4">
+              <span class="step-icon">⏳</span>
+              <span class="step-text">Generando simulación predictiva…</span>
+            </div>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <p class="loading-percent" id="loading-percent">0%</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- RESULTADO                                      -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="result-section" class="section hidden">
+      <div class="container">
+        
+        <!-- ALERTA PRINCIPAL -->
+        <div class="result-alert" id="result-alert">
+          <div class="alert-flash" id="alert-flash"></div>
+          <div class="alert-icon" id="alert-icon">🚨</div>
+          <h2 class="alert-title" id="alert-title">ALERTA DE ESTAFA DETECTADA</h2>
+          <p class="alert-subtitle" id="alert-subtitle">Este mensaje contiene múltiples indicadores de fraude</p>
+        </div>
+
+        <!-- SCORE GAUGE -->
+        <div class="score-section">
+          <div class="score-gauge" id="score-gauge">
+            <svg viewBox="0 0 200 200" class="gauge-svg">
+              <circle cx="100" cy="100" r="85" class="gauge-bg" />
+              <circle cx="100" cy="100" r="85" class="gauge-fill" id="gauge-fill" 
+                      stroke-dasharray="534" stroke-dashoffset="534" />
+            </svg>
+            <div class="gauge-center">
+              <span class="gauge-number" id="gauge-number">0</span>
+              <span class="gauge-percent">%</span>
+              <span class="gauge-label">RIESGO</span>
+            </div>
+          </div>
+          <div class="score-details">
+            <div class="score-level" id="score-level">
+              <span class="level-badge level-high" id="level-badge">ALTO</span>
+            </div>
+            <div class="score-type" id="score-type">
+              <span class="type-icon">🎣</span>
+              <span class="type-text" id="type-text">Fraude de inversión</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- INDICADORES DETECTADOS -->
+        <div class="indicators-section" id="indicators-section">
+          <h3 class="section-title">
+            <span class="title-icon">⚠️</span>
+            Indicadores detectados
+          </h3>
+          <div class="indicators-grid" id="indicators-grid">
+            <!-- Se llena dinámicamente -->
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- SIMULACIÓN TIMELINE                        -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="simulation-section" id="simulation-section">
+          <h3 class="section-title">
+            <span class="title-icon">💀</span>
+            Esto pasará si continúas…
+          </h3>
+          <div class="timeline" id="timeline">
+            <!-- Se llena dinámicamente -->
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- EXPLICACIÓN HUMANA                         -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="explanation-section" id="explanation-section">
+          <h3 class="section-title">
+            <span class="title-icon">🧠</span>
+            ¿Por qué es una estafa?
+          </h3>
+          <div class="explanation-cards" id="explanation-cards">
+            <!-- Se llena dinámicamente -->
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- RASTREO GEOGRAFICO (OSINT)                 -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="osint-section hidden" id="osint-section">
+          <h3 class="section-title">
+            <span class="title-icon">🌍</span>
+            Rastreo Geográfico e Identidades (OSINT)
+          </h3>
+          <div class="osint-container">
+            <div class="osint-warning">
+              <span class="warning-icon">📍</span>
+              <strong>ALERTA MUNDIAL:</strong> Los identificadores detectados han sido rastreados e ingresados a la lista negra global de Robert.
+            </div>
+            
+            <div class="osint-data-grid">
+              <div class="osint-card osint-identifiers">
+                <h4>Detalles Extraídos</h4>
+                <div id="osint-chips" class="osint-chips-container">
+                  <!-- Llenado dinámicamente -->
+                </div>
+              </div>
+              
+              <div class="osint-card osint-map-container">
+                <div class="osint-location-label" id="osint-location-label">
+                  Origen detectado: Desconocido
+                </div>
+                <!-- Aquí se incrusta el iframe del mapa dinámicamente -->
+                <div id="map-frame-wrapper" class="map-frame-wrapper"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- TEXTO ORIGINAL ANALIZADO                   -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="original-text-section">
+          <h3 class="section-title">
+            <span class="title-icon">📝</span>
+            Texto analizado
+          </h3>
+          <div class="original-text-box" id="original-text-box">
+            <!-- Texto original -->
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- SECCIÓN VIRAL / COMPARTIR                  -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="share-section" id="share-section">
+          <h3 class="section-title">
+            <span class="title-icon">📲</span>
+            ¡Comparte y protege a otros!
+          </h3>
+          <div class="share-buttons">
+            <button class="btn-share btn-whatsapp" id="btn-share-whatsapp">
+              <span class="share-icon">📱</span>
+              Compartir en WhatsApp
+            </button>
+            <button class="btn-share btn-image" id="btn-create-image">
+              <span class="share-icon">🖼️</span>
+              Crear imagen para compartir
+            </button>
+            <button class="btn-share btn-download" id="btn-download">
+              <span class="share-icon">📥</span>
+              Descargar resultado
+            </button>
+            <button class="btn-share btn-tiktok" id="btn-tiktok">
+              <span class="share-icon">🎥</span>
+              Generar video
+            </button>
+          </div>
+        </div>
+
+        <!-- ESPACIO PUBLICITARIO 2 (Antes de pedir un nuevo análisis) -->
+        <div class="ad-container" style="text-align: center; margin: 30px auto; width: 100%; max-width: 728px; min-height: 90px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-0000000000000000"
+               data-ad-slot="0000000000"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+          <script>
+               (adsbygoogle = window.adsbygoogle || []).push({});
+          </script>
+        </div>
+
+        <!-- BOTÓN NUEVO ANÁLISIS -->
+        <button class="btn-new-analysis" id="btn-new-analysis">
+          <span>🔄</span> Analizar otro mensaje
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- REPORTE OSINT POLICIAL (VICTIM TAB)        -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="section hidden" id="victim-report-section">
+      <div class="container">
+        <div class="victim-report-container" id="printable-report">
+          <div class="report-header">
+            <div class="report-stamp">CONFIDENCIAL - USO OFICIAL</div>
+            <h2>DOSSIER DE INVESTIGACIÓN OSINT</h2>
+            <p>Reporte de Fraude Cibernético generado por Robert AI</p>
+            <p style="font-size:0.8rem; color:#555; margin-top:8px; font-style:italic;">
+              Este reporte muestra la <strong>región de registro del número telefónico</strong> según su prefijo internacional.
+              No representa la ubicación GPS en tiempo real del sospechoso.
+              Presentar ante autoridades como documento de apoyo inicial.
+            </p>
+          </div>
+          
+          <div class="report-body">
+            <div class="report-row">
+              <strong>Fecha de Emisión:</strong> <span id="report-date"></span>
+            </div>
+            <div class="report-row">
+              <strong>ID de Rastreo:</strong> <span id="report-id"></span>
+            </div>
+            <div class="report-block">
+              <h3>1. DATOS EXTRAÍDOS DEL SOSPECHOSO</h3>
+              <p><strong>Teléfono Registrado:</strong> <span id="report-phone"></span></p>
+              <p><strong>Alias/Enlace Registrado:</strong> <span id="report-handle"></span></p>
+            </div>
+            
+            <div class="report-block" id="report-gps-block" style="display:none;">
+              <h3>🎯 COORDENADAS GPS EXACTAS (Extraídas de EXIF de imagen)</h3>
+              <div class="report-geo-result" style="background:#fff3cd; border:1px solid #ffc107; padding:10px; border-radius:4px;">
+                <p style="color:#856404; font-weight:700; font-size:0.9rem;">[★ PRECISIÓN ALTA] Estas coordenadas fueron obtenidas de los metadatos reales de la foto enviada por el estafador.</p>
+                <p><strong>Latitud:</strong> <span id="report-lat"></span></p>
+                <p><strong>Longitud:</strong> <span id="report-lng"></span></p>
+                <p><strong>Link a Google Maps:</strong> <a id="report-gps-link" href="#" target="_blank" style="color:#d10000; font-weight:bold;">Ver coordenadas exactas</a></p>
+              </div>
+              <div class="report-map-container" id="report-gps-map" style="margin-top:10px;">
+                <!-- GPS exact map iframe here -->
+              </div>
+            </div>
+
+            <div class="report-block" id="report-prefix-block">
+              <h3>2. ORIGEN GEOGRÁFICO DEL NÚMERO (METADATOS OSINT)</h3>
+              <p style="font-size: 0.9rem; color: #555; margin-bottom: 10px;">
+                Región donde fue <strong>registrado el chip / línea telefónica</strong> según el código indicativo internacional.
+                El mapa muestra esa zona general, no la ubicación exacta del sospechoso:
+              </p>
+              <div class="report-geo-result">
+                <span>📍 Ubicación de Origen Detectada:</span>
+                <strong id="report-location"></strong>
+              </div>
+              <div class="report-map-container" id="report-map-container">
+                <!-- Map iframe injected here -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="report-actions">
+            <button class="btn-primary" id="btn-print-report" style="width: 100%;">🖨️ Imprimir / Guardar PDF para Autoridades</button>
+            <p style="font-size:0.8rem; color: #666; margin-top: 15px; text-align: center;">
+              ⚠️ Este documento es un reporte de apoyo inicial. No sustituye una denuncia formal.
+              Para activar una investigación real, presente este reporte ante la <strong>Fiscalía General, DIJIN o la Policía Nacional</strong> de su país.
+              La ubicación mostrada corresponde a la región de registro del prefijo telefónico, no a la posición GPS del estafador.
+            </p>
+          </div>
+        </div>
+        
+        <button class="btn-new-analysis" id="btn-victim-back">
+          <span>🔄</span> Volver al inicio
+        </button>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SECCIÓN: RESULTADO SEGURO                      -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="safe-section" class="section hidden">
+      <div class="container">
+        <div class="safe-container">
+          <div class="safe-icon-wrapper">
+            <span class="safe-icon">✅</span>
+          </div>
+          <h2 class="safe-title">Mensaje aparentemente seguro</h2>
+          <p class="safe-subtitle" id="safe-subtitle">No se detectaron patrones significativos de estafa</p>
+          <div class="safe-score">
+            <span class="safe-number" id="safe-score-number">15</span>
+            <span class="safe-percent">%</span>
+            <span class="safe-label">riesgo</span>
+          </div>
+          <p class="safe-warning">⚡ Recuerda: ningún sistema es 100% infalible. Mantén siempre la precaución.</p>
+          <button class="btn-new-analysis" id="btn-new-analysis-safe">
+            <span>🔄</span> Analizar otro mensaje
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- FOOTER                                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <footer id="main-footer">
+    <div class="container">
+      <p class="footer-text">
+        <img src="/logo.png" style="width: 16px; vertical-align: middle; border-radius: 50%;"> <strong>Robert</strong> — Detector de Estafas con Inteligencia Artificial
+      </p>
+      <div class="footer-disclaimer-box">
+        <p class="footer-disclaimer">
+          <strong>⚠️ Aviso Legal:</strong> Robert utiliza motores avanzados de Inteligencia Artificial especializados en patrones de fraude cibernético. Aunque su capacidad de detección gráfica y textual es de nivel experto y neutraliza tácticas complejas de ingeniería social, ninguna tecnología es infalible al 100%. Te recomendamos no tomar decisiones financieras usando exclusivamente este reporte. Ante la menor duda, detén tu interacción con el sospechoso y contacta a los canales oficiales. Los creadores de esta plataforma no se hacen responsables de decisiones tomadas en base a esta herramienta.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CANVAS OCULTO PARA GENERAR IMÁGENES -->
+  <canvas id="share-canvas" width="1080" height="1920" style="display:none;"></canvas>
+
+  <!-- MODAL: ACERCA DE -->
+  <div id="about-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <button class="modal-close" id="modal-close-about">&times;</button>
+      <div class="modal-header">
+        <img src="/logo.png" alt="Robert Logo" class="modal-logo">
+        <h2>La Historia de Robert</h2>
+      </div>
+      <div class="modal-body">
+        <p>
+          Este proyecto fue creado por <strong>Johan Estiben</strong>. Hace algún tiempo, él mismo fue víctima de una estafa cibernética. Frustrado ante la falta de herramientas para prevenirlo, decidió usar Inteligencia Artificial para crear a <strong>Robert</strong>, el defensor digital definitivo.
+        </p>
+        <p>
+          La IA analiza psicológicamente las palabras y detecta manipulaciones sutiles, promesas falsas de dinero y tácticas de urgencia antes de que sea muy tarde. El objetivo principal es advertir a tiempo a las personas para que no pierdan su dinero.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DONACIONES -->
+  <div id="donate-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <button class="modal-close" id="modal-close-donate">&times;</button>
+      <div class="modal-header">
+        <h2>❤️ Apoya este proyecto</h2>
+        <p style="color: var(--text-secondary); margin-top: 10px;">
+          Los servidores de Inteligencia Artificial tienen un costo elevado. Si Robert te ayudó a detectar una estafa, tu apoyo voluntario permite que siga siendo gratis para todos.
+        </p>
+      </div>
+      <div class="modal-body">
+        <div class="payment-methods" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+          <a href="https://link.mercadopago.com.co/robertai" target="_blank" class="btn-payment" id="btn-pay-mp" style="text-decoration: none; width: 100%; display: flex; justify-content: center; background: #009ee3; color: white; border: none; font-weight: bold; border-radius: 8px; padding: 15px;">
+            <span class="payment-icon" style="background: white; border-radius: 50%; padding: 2px 4px; color: #009ee3; margin-right: 10px;">🤝</span>
+            Donar de forma segura
+          </a>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; text-align: center;">
+            Acepta Nequi, PSE, Tarjetas de Crédito y Débito a través de Mercado Pago.
+          </p>
+        </div>
+        
+        <p style="font-size: 0.8rem; margin-top: 20px; color: var(--text-muted); text-align: center;">
+          Al seleccionar tu método de pago, serás redirigido a una pasarela segura. La donación llegará a nombre de Johan Estiben (Creador de Robert).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+  <script src='https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.cjs'></script>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
