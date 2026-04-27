@@ -183,7 +183,7 @@ app.get('/api/status', (req, res) => {
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // Redirige cualquier otra ruta al index.html (para que recargar la página funcione)
-app.get('*', (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
