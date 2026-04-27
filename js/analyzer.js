@@ -17,7 +17,9 @@ export async function analyzeData(payload) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al comunicarse con el servidor de análisis');
+      const msg = errorData.error || 'Error al comunicarse con el servidor de análisis';
+      const details = errorData.details ? ` (${errorData.details})` : '';
+      throw new Error(msg + details);
     }
 
     const data = await response.json();

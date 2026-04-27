@@ -134,7 +134,7 @@ Estructura EXCLUSIVA del JSON:
   "explanations": [ { "icon": "🧠", "title": "Manipulación del miedo", "description": "Juegan con tu temor..." } ],
   "flaggedWords": ["transferencia", "urgente"],
   "extractedIdentifiers": ["+1234567890", "link-falso.com"],
-  "osint_location": "Nigeria"
+    "osint_location": "Nigeria"
 }
 
 Nota: "level" solo puede ser "ALTO", "MEDIO" o "BAJO". "color" de timeline: "green", "yellow", "red", "dark-red". Solo devuelve el JSON, NUNCA text markdown. Si es seguro, nivel BAJO, score bajo, y extractedIdentifiers vacío.
@@ -178,29 +178,38 @@ app.post('/api/analyze', async (req, res) => {
   // Usamos Llama 3.2 Vision si hay imágenes, o Llama 3.3 para texto puro
   const modelToUse = hasImages ? 'llama-3.2-11b-vision-preview' : 'llama-3.3-70b-versatile';
   
-  const messagesPayload = [
-    { 
-      role: 'system', 
-      content: getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : "") 
-    }
-  ];
+  const systemPrompt = getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : "");
+  
+  const messagesPayload = [];
+
+  // IMPORTANTE: Algunos modelos Vision en Groq fallan si se usa el rol 'system' junto con imágenes. 
+  // Para máxima compatibilidad, incluimos las instrucciones en el primer mensaje de 'user'.
+  if (!hasImages) {
+    messagesPayload.push({ role: 'system', content: systemPrompt });
+  }
 
   // Construir contenido del usuario
   const userContent = [];
   
+  // Si hay imágenes, el prompt de sistema va aquí dentro
+  if (hasImages) {
+    userContent.push({ 
+      type: 'text', 
+      text: "INSTRUCCIONES DE SISTEMA:\n" + systemPrompt + "\n\nMENSAJE DEL USUARIO A ANALIZAR:\n" 
+    });
+  }
+
   // Agregar texto si existe
   let textPrompt = "Analiza el siguiente contenido ";
   textPrompt += hasImages ? "junto con las imágenes adjuntas. " : "proporcionado. ";
-  textPrompt += "Busca patrones de fraude, manipulación o estafa.\n\nContenido: ";
+  textPrompt += "Busca patrones de fraude, manipulación o estafa. DEBES RESPONDER SOLO EN FORMATO JSON.\n\nContenido: ";
   textPrompt += safeMessage || "[Sin texto, analizar solo imágenes]";
   
   userContent.push({ type: 'text', text: textPrompt });
 
-  // Agregar imágenes si existen (Groq soporta hasta 10 imágenes en 3.2 Vision)
+  // Agregar imágenes si existen
   if (hasImages) {
     images.forEach((imgBase64) => {
-      // Si la imagen ya viene con el prefijo 'data:image/...;base64,', lo usamos. 
-      // Si no, asumimos que es base64 puro y le ponemos un prefijo genérico.
       const url = imgBase64.startsWith('data:') ? imgBase64 : `data:image/png;base64,${imgBase64}`;
       userContent.push({
         type: 'image_url',
