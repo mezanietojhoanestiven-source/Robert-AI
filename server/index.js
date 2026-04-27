@@ -40,25 +40,65 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/analyze', apiLimiter);
 
+const DEFAULT_DB = {
+  extractedIdentifiers: [],
+  totalAnalyses: 0,
+  scamsDetected: 0,
+  recentScams: []
+};
+
+async function loadDB() {
+  try {
+    const data = await fs.readFile(DB_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return DEFAULT_DB;
+  }
+}
+
+async function saveDB(data) {
+  await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
+}
+
 async function initDB() {
-  try { await fs.access(DB_PATH); } 
-  catch { await fs.writeFile(DB_PATH, JSON.stringify({ extractedIdentifiers: [] })); }
+  try {
+    await fs.access(DB_PATH);
+  } catch {
+    await saveDB(DEFAULT_DB);
+  }
 }
 initDB();
 
 async function getBlacklist() {
-  try {
-    const data = await fs.readFile(DB_PATH, 'utf-8');
-    return JSON.parse(data).extractedIdentifiers || [];
-  } catch { return []; }
+  const db = await loadDB();
+  return db.extractedIdentifiers || [];
 }
 
-async function addToBlacklist(identifiers) {
-  if (!identifiers || identifiers.length === 0) return;
-  const current = await getBlacklist();
-  const added = new Set(current);
-  identifiers.forEach(id => added.add(id));
-  await fs.writeFile(DB_PATH, JSON.stringify({ extractedIdentifiers: Array.from(added) }));
+async function updateOnAnalysis(result) {
+  const db = await loadDB();
+  db.totalAnalyses = (db.totalAnalyses || 0) + 1;
+
+  if (result.level === 'ALTO') {
+    db.scamsDetected = (db.scamsDetected || 0) + 1;
+    
+    // Add to extracted identifiers (blacklist)
+    if (result.extractedIdentifiers && result.extractedIdentifiers.length > 0) {
+      const added = new Set(db.extractedIdentifiers);
+      result.extractedIdentifiers.forEach(id => added.add(id));
+      db.extractedIdentifiers = Array.from(added);
+    }
+
+    // Add to recent feed (anonymized)
+    const newEntry = {
+      id: Date.now().toString(36),
+      type: result.scamType,
+      location: result.osint_location || "Internacional",
+      timestamp: new Date().toISOString()
+    };
+    db.recentScams = [newEntry, ...(db.recentScams || [])].slice(0, 10);
+  }
+
+  await saveDB(db);
 }
 
 const getSystemPrompt = (blacklistStr) => `
@@ -158,10 +198,8 @@ app.post('/api/analyze', async (req, res) => {
       jsonResult.level = 'BAJO';
     }
 
-    // MEMORIA COLECTIVA: Si es muy riesgoso guardar los identificadores en la DB
-    if (jsonResult.level === 'ALTO' && jsonResult.extractedIdentifiers?.length > 0) {
-      await addToBlacklist(jsonResult.extractedIdentifiers);
-    }
+    // Actualizar estadísticas y memoria colectiva
+    await updateOnAnalysis(jsonResult);
 
     return res.status(200).json(jsonResult);
     
@@ -172,6 +210,19 @@ app.post('/api/analyze', async (req, res) => {
       details: error.message
     });
   }
+});
+
+app.get('/api/stats', async (req, res) => {
+  const db = await loadDB();
+  res.json({
+    totalAnalyses: db.totalAnalyses || 0,
+    scamsDetected: db.scamsDetected || 0
+  });
+});
+
+app.get('/api/recent', async (req, res) => {
+  const db = await loadDB();
+  res.json(db.recentScams || []);
 });
 
 app.get('/api/status', (req, res) => {

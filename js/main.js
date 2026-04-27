@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
    ROBERT: DETECTOR DE ESTAFAS — MAIN JS
-   Motor de análisis + UI + Compartir + Video
+   Motor de análisis + UI + Compartir
    ═══════════════════════════════════════════════════════════════ */
 
 import { analyzeData } from './analyzer.js';
 import { initParticles } from './particles.js';
-import { generateShareImage, generateTikTokVideo } from './media.js';
+import { PHONE_PREFIXES } from './prefixes.js';
 
 /* ─── DOM ELEMENTS ─── */
 const heroSection       = document.getElementById('hero-section');
@@ -35,9 +35,7 @@ const originalTextBox   = document.getElementById('original-text-box');
 
 // Share buttons
 const btnShareWhatsapp  = document.getElementById('btn-share-whatsapp');
-const btnCreateImage    = document.getElementById('btn-create-image');
-const btnDownload       = document.getElementById('btn-download');
-const btnTikTok         = document.getElementById('btn-tiktok');
+
 
 // New analysis buttons
 const btnNewAnalysis     = document.getElementById('btn-new-analysis');
@@ -49,6 +47,7 @@ const inputTabs          = document.querySelectorAll('.input-tab');
 /* ─── STATE ─── */
 let currentResult = null;
 let selectedImages = [];
+let tesseractWorker = null; // Worker persistente para mayor velocidad
 
 const imageUpload = document.getElementById('image-upload');
 const uploadArea = document.getElementById('upload-area');
@@ -58,14 +57,74 @@ const imageUploadWrapper  = document.getElementById('image-upload-wrapper');
 const victimUploadWrapper = document.getElementById('victim-upload-wrapper');
 const victimReportSection = document.getElementById('victim-report-section');
 
-
 /* ═══════════════════════════════════════════════════════════════
    INITIALIZATION
    ═══════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   initParticles();
+  initRealTimeData();
   bindEvents();
 });
+
+async function initRealTimeData() {
+  fetchStats();
+  fetchRecentScams();
+  // Pre-load Tesseract worker in background
+  initTesseract();
+}
+
+async function fetchStats() {
+  try {
+    const res = await fetch('/api/stats');
+    const data = await res.json();
+    if (data.totalAnalyses !== undefined) {
+      document.getElementById('stat-total-analyses').textContent = data.totalAnalyses.toLocaleString();
+      document.getElementById('stat-scams-detected').textContent = data.scamsDetected.toLocaleString();
+    }
+  } catch (e) { console.error('Error fetching stats:', e); }
+}
+
+async function fetchRecentScams() {
+  try {
+    const res = await fetch('/api/recent');
+    const scams = await res.json();
+    renderRecentScams(scams);
+  } catch (e) { console.error('Error fetching recent scams:', e); }
+}
+
+function renderRecentScams(scams) {
+  const container = document.getElementById('recent-scams-feed');
+  if (!container) return;
+  
+  if (!scams || scams.length === 0) {
+    container.innerHTML = '<div class="feed-placeholder">Esperando reportes de la comunidad...</div>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  scams.forEach(scam => {
+    const div = document.createElement('div');
+    div.className = 'feed-item';
+    const date = new Date(scam.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    div.innerHTML = `
+      <div class="feed-item-info">
+        <span class="feed-item-type">${scam.type}</span>
+        <span class="feed-item-loc">📍 Origen: ${scam.location}</span>
+      </div>
+      <span class="feed-item-time">${date}</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+async function initTesseract() {
+  try {
+    if (!tesseractWorker) {
+      tesseractWorker = await Tesseract.createWorker('spa');
+    }
+  } catch (e) { console.error('Tesseract init error:', e); }
+}
 
 /* ─── BIND EVENTS ─── */
 function bindEvents() {
@@ -99,7 +158,7 @@ function bindEvents() {
   // Character counter
   messageInput.addEventListener('input', () => {
     const len = messageInput.value.length;
-    charCount.textContent = `${len.toLocaleString()} / 5,000`;
+    charCount.textContent = `${len.toLocaleString()} / 3,000`;
   });
 
   // Tabs switching logic
@@ -208,9 +267,7 @@ function bindEvents() {
 
   // Share buttons
   btnShareWhatsapp.addEventListener('click', shareWhatsApp);
-  btnCreateImage.addEventListener('click', handleCreateImage);
-  btnDownload.addEventListener('click', handleDownload);
-  btnTikTok.addEventListener('click', handleTikTok);
+
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -254,132 +311,7 @@ function renderPreviews() {
 /* ═══════════════════════════════════════════════════════════════
    VICTIM OSINT: BASE DE DATOS DE PREFIJOS TELEFÓNICOS
    ═══════════════════════════════════════════════════════════════ */
-const PHONE_PREFIXES = [
-  { prefix: '+1 204', country: 'Canadá', city: 'Manitoba' },
-  { prefix: '+1 647', country: 'Canadá', city: 'Toronto, Ontario' },
-  { prefix: '+1 514', country: 'Canadá', city: 'Montreal, Quebec' },
-  { prefix: '+1 604', country: 'Canadá', city: 'Vancouver, BC' },
-  { prefix: '+1', country: 'Estados Unidos / Canadá', city: 'Norteamérica' },
-  { prefix: '+57 310', country: 'Colombia', city: 'Línea Claro' },
-  { prefix: '+57 311', country: 'Colombia', city: 'Línea Claro' },
-  { prefix: '+57 312', country: 'Colombia', city: 'Línea Claro' },
-  { prefix: '+57 313', country: 'Colombia', city: 'Línea Claro' },
-  { prefix: '+57 314', country: 'Colombia', city: 'Línea Claro' },
-  { prefix: '+57 315', country: 'Colombia', city: 'Línea Tigo' },
-  { prefix: '+57 316', country: 'Colombia', city: 'Línea Tigo' },
-  { prefix: '+57 317', country: 'Colombia', city: 'Línea Tigo' },
-  { prefix: '+57 318', country: 'Colombia', city: 'Línea Tigo' },
-  { prefix: '+57 319', country: 'Colombia', city: 'Línea ETB' },
-  { prefix: '+57 320', country: 'Colombia', city: 'Línea Tigo' },
-  { prefix: '+57 321', country: 'Colombia', city: 'Línea Tigo' },
-  { prefix: '+57 322', country: 'Colombia', city: 'Línea Tigo' },
-  { prefix: '+57 323', country: 'Colombia', city: 'Línea Tigo' },
-  { prefix: '+57 324', country: 'Colombia', city: 'Línea Tigo' },
-  { prefix: '+57 300', country: 'Colombia', city: 'Línea Claro (Bogotá)' },
-  { prefix: '+57 301', country: 'Colombia', city: 'Línea Claro' },
-  { prefix: '+57 302', country: 'Colombia', city: 'Línea Claro' },
-  { prefix: '+57 303', country: 'Colombia', city: 'Línea Claro' },
-  { prefix: '+57 304', country: 'Colombia', city: 'Línea Claro' },
-  { prefix: '+57 305', country: 'Colombia', city: 'Línea Claro' },
-  { prefix: '+57 350', country: 'Colombia', city: 'Línea Movistar' },
-  { prefix: '+57 351', country: 'Colombia', city: 'Línea Movistar' },
-  { prefix: '+57 352', country: 'Colombia', city: 'Línea Movistar' },
-  { prefix: '+57', country: 'Colombia', city: 'Colombia' },
-  { prefix: '+52 55', country: 'México', city: 'Ciudad de México' },
-  { prefix: '+52 33', country: 'México', city: 'Guadalajara, Jalisco' },
-  { prefix: '+52 81', country: 'México', city: 'Monterrey, Nuevo León' },
-  { prefix: '+52', country: 'México', city: 'México' },
-  { prefix: '+54 11', country: 'Argentina', city: 'Buenos Aires' },
-  { prefix: '+54', country: 'Argentina', city: 'Argentina' },
-  { prefix: '+55 11', country: 'Brasil', city: 'São Paulo' },
-  { prefix: '+55 21', country: 'Brasil', city: 'Río de Janeiro' },
-  { prefix: '+55', country: 'Brasil', city: 'Brasil' },
-  { prefix: '+51 1', country: 'Perú', city: 'Lima' },
-  { prefix: '+51', country: 'Perú', city: 'Perú' },
-  { prefix: '+56 2', country: 'Chile', city: 'Santiago' },
-  { prefix: '+56', country: 'Chile', city: 'Chile' },
-  { prefix: '+58 212', country: 'Venezuela', city: 'Caracas' },
-  { prefix: '+58', country: 'Venezuela', city: 'Venezuela' },
-  { prefix: '+593 2', country: 'Ecuador', city: 'Quito' },
-  { prefix: '+593', country: 'Ecuador', city: 'Ecuador' },
-  { prefix: '+591', country: 'Bolivia', city: 'Bolivia' },
-  { prefix: '+595', country: 'Paraguay', city: 'Paraguay' },
-  { prefix: '+598', country: 'Uruguay', city: 'Uruguay' },
-  { prefix: '+507', country: 'Panamá', city: 'Panamá' },
-  { prefix: '+506', country: 'Costa Rica', city: 'Costa Rica' },
-  { prefix: '+503', country: 'El Salvador', city: 'El Salvador' },
-  { prefix: '+504', country: 'Honduras', city: 'Honduras' },
-  { prefix: '+502', country: 'Guatemala', city: 'Guatemala' },
-  { prefix: '+505', country: 'Nicaragua', city: 'Nicaragua' },
-  { prefix: '+53', country: 'Cuba', city: 'Cuba' },
-  { prefix: '+509', country: 'Haití', city: 'Haití' },
-  { prefix: '+1 809', country: 'República Dominicana', city: 'Santo Domingo' },
-  { prefix: '+34 91', country: 'España', city: 'Madrid' },
-  { prefix: '+34 93', country: 'España', city: 'Barcelona' },
-  { prefix: '+34', country: 'España', city: 'España' },
-  { prefix: '+44 20', country: 'Reino Unido', city: 'Londres' },
-  { prefix: '+44', country: 'Reino Unido', city: 'Reino Unido' },
-  { prefix: '+33 1', country: 'Francia', city: 'París' },
-  { prefix: '+33', country: 'Francia', city: 'Francia' },
-  { prefix: '+49 30', country: 'Alemania', city: 'Berlín' },
-  { prefix: '+49', country: 'Alemania', city: 'Alemania' },
-  { prefix: '+39 06', country: 'Italia', city: 'Roma' },
-  { prefix: '+39', country: 'Italia', city: 'Italia' },
-  { prefix: '+7 495', country: 'Rusia', city: 'Moscú' },
-  { prefix: '+7', country: 'Rusia / Kazajistán', city: 'Rusia' },
-  { prefix: '+86 10', country: 'China', city: 'Pekín' },
-  { prefix: '+86 21', country: 'China', city: 'Shanghái' },
-  { prefix: '+86', country: 'China', city: 'China' },
-  { prefix: '+91 11', country: 'India', city: 'Nueva Delhi' },
-  { prefix: '+91 22', country: 'India', city: 'Bombay / Mumbai' },
-  { prefix: '+91', country: 'India', city: 'India' },
-  { prefix: '+234 1', country: 'Nigeria', city: 'Lagos' },
-  { prefix: '+234 9', country: 'Nigeria', city: 'Abuja' },
-  { prefix: '+234', country: 'Nigeria', city: 'Nigeria' },
-  { prefix: '+27 11', country: 'Sudáfrica', city: 'Johannesburgo' },
-  { prefix: '+27', country: 'Sudáfrica', city: 'Sudáfrica' },
-  { prefix: '+20 2', country: 'Egipto', city: 'El Cairo' },
-  { prefix: '+20', country: 'Egipto', city: 'Egipto' },
-  { prefix: '+212', country: 'Marruecos', city: 'Marruecos' },
-  { prefix: '+54', country: 'Argentina', city: 'Argentina' },
-  { prefix: '+971 4', country: 'Emiratos Árabes', city: 'Dubái' },
-  { prefix: '+971', country: 'Emiratos Árabes', city: 'Emiratos Árabes Unidos' },
-  { prefix: '+966 11', country: 'Arabia Saudita', city: 'Riad' },
-  { prefix: '+966', country: 'Arabia Saudita', city: 'Arabia Saudita' },
-  { prefix: '+82 2', country: 'Corea del Sur', city: 'Seúl' },
-  { prefix: '+82', country: 'Corea del Sur', city: 'Corea del Sur' },
-  { prefix: '+81 3', country: 'Japón', city: 'Tokio' },
-  { prefix: '+81', country: 'Japón', city: 'Japón' },
-  { prefix: '+63 2', country: 'Filipinas', city: 'Manila' },
-  { prefix: '+63', country: 'Filipinas', city: 'Filipinas' },
-  { prefix: '+62 21', country: 'Indonesia', city: 'Yakarta' },
-  { prefix: '+62', country: 'Indonesia', city: 'Indonesia' },
-  { prefix: '+60 3', country: 'Malasia', city: 'Kuala Lumpur' },
-  { prefix: '+60', country: 'Malasia', city: 'Malasia' },
-  { prefix: '+66 2', country: 'Tailandia', city: 'Bangkok' },
-  { prefix: '+66', country: 'Tailandia', city: 'Tailandia' },
-  { prefix: '+880', country: 'Bangladés', city: 'Daca' },
-  { prefix: '+92 51', country: 'Pakistán', city: 'Islamabad' },
-  { prefix: '+92', country: 'Pakistán', city: 'Pakistán' },
-  { prefix: '+961', country: 'Líbano', city: 'Beirut' },
-  { prefix: '+90 212', country: 'Turquía', city: 'Estambul' },
-  { prefix: '+90', country: 'Turquía', city: 'Turquía' },
-  { prefix: '+380', country: 'Ucrania', city: 'Ucrania' },
-  { prefix: '+48', country: 'Polonia', city: 'Polonia' },
-  { prefix: '+31', country: 'Países Bajos', city: 'Países Bajos' },
-  { prefix: '+32', country: 'Bélgica', city: 'Bélgica' },
-  { prefix: '+41', country: 'Suiza', city: 'Suiza' },
-  { prefix: '+43', country: 'Austria', city: 'Austria' },
-  { prefix: '+46', country: 'Suecia', city: 'Estocolmo' },
-  { prefix: '+47', country: 'Noruega', city: 'Oslo' },
-  { prefix: '+45', country: 'Dinamarca', city: 'Copenhague' },
-  { prefix: '+358', country: 'Finlandia', city: 'Helsinki' },
-  { prefix: '+351', country: 'Portugal', city: 'Lisboa' },
-  { prefix: '+30', country: 'Grecia', city: 'Atenas' },
-  { prefix: '+40', country: 'Rumanía', city: 'Bucarest' },
-  { prefix: '+420', country: 'República Checa', city: 'Praga' },
-  { prefix: '+36', country: 'Hungría', city: 'Budapest' },
-];
+// Los prefijos se importan ahora desde ./prefixes.js para mantener este archivo limpio.
 
 function resolvePhoneOsint(phone) {
   // Normalise: remove spaces/dashes for matching
@@ -525,20 +457,23 @@ window.removeImage = removeImage;
    ═══════════════════════════════════════════════════════════════ */
 async function extractTextFromImages(files) {
   let combinedText = '';
-  // Convertimos las imágenes subidas en texto mediante Tesseract JS local
-  // Informamos al usuario en la notificación
-  showToast('👁️ Leyendo imágenes con Visión Artificial...');
+  showToast('👁️ Analizando capturas con Visión Artificial...');
   
-  for (const file of files) {
-    try {
+  try {
+    // Asegurar que el worker esté listo
+    if (!tesseractWorker) await initTesseract();
+    
+    for (const file of files) {
       const url = URL.createObjectURL(file);
-      const result = await Tesseract.recognize(url, 'spa');
+      const result = await tesseractWorker.recognize(url);
       combinedText += result.data.text + '\n';
       URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error('Error al extraer texto:', e);
     }
+  } catch (e) {
+    console.error('Error al extraer texto:', e);
+    throw new Error('Error en el motor de visión. Intenta de nuevo.');
   }
+  
   return combinedText.trim();
 }
 
@@ -556,13 +491,13 @@ async function startAnalysis() {
   }
 
   if (activeTab === 'link') {
-    const text = messageInput.value.trim();
+    const text = messageInput.value.replace(/\s+/g, ' ').trim();
     if (!text) {
       showToast('⚠️ Pega un link o mensaje para analizar');
       messageInput.focus();
       return;
     }
-    payload = { message: text };
+    payload = { message: text.substring(0, 3000) };
   } else {
     if (selectedImages.length === 0) {
       showToast('📸 Sube al menos 1 captura de pantalla');
@@ -603,6 +538,10 @@ async function startAnalysis() {
     } else {
       showSafeResult(currentResult);
     }
+
+    // Update stats after analysis
+    fetchStats();
+    fetchRecentScams();
 
     // Scroll to top of result
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -889,152 +828,7 @@ function shareWhatsApp() {
   window.open(url, '_blank');
 }
 
-async function handleCreateImage() {
-  if (!currentResult) return;
-  
-  showToast('🖼️ Generando imagen…');
-  
-  try {
-    const dataUrl = await generateShareImage(currentResult);
-    showImageModal(dataUrl);
-  } catch (err) {
-    console.error(err);
-    showToast('❌ Error al generar la imagen');
-  }
-}
 
-async function handleDownload() {
-  if (!currentResult) return;
-  
-  showToast('📥 Preparando descarga…');
-  
-  try {
-    const dataUrl = await generateShareImage(currentResult);
-    
-    const link = document.createElement('a');
-    link.download = `robert-estafa-${currentResult.score}pct.png`;
-    link.href = dataUrl;
-    link.click();
-    
-    showToast('✅ Imagen descargada');
-  } catch (err) {
-    console.error(err);
-    showToast('❌ Error al descargar');
-  }
-}
-
-async function handleTikTok() {
-  if (!currentResult) return;
-
-  // ── Crear modal de progreso ──
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.innerHTML = `
-    <div class="modal-content" id="video-modal-content">
-      <h3>🎥 Generando video…</h3>
-      <div class="video-progress">
-        <p>Creando animaciones…</p>
-        <div class="progress-bar-container">
-          <div class="progress-bar" id="video-progress-bar" style="width:0%"></div>
-        </div>
-        <p class="loading-percent" id="video-progress-pct">0%</p>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-  const modalContent = overlay.querySelector('#video-modal-content');
-
-  try {
-    const blob = await generateTikTokVideo(
-      currentResult,
-      (progress) => {
-        const progEl = overlay.querySelector('#video-progress-bar');
-        const percEl = overlay.querySelector('#video-progress-pct');
-        if (progEl) progEl.style.width = `${Math.round(progress)}%`;
-        if (percEl) percEl.textContent  = `${Math.round(progress)}%`;
-      },
-      selectedImages
-    );
-
-    // ── Video listo — reemplazar contenido del modal ──
-    const url = URL.createObjectURL(blob);
-    modalContent.innerHTML = `
-      <h3>🎥 ¡Video listo!</h3>
-      <video src="${url}" controls autoplay
-        style="width:100%;max-height:60vh;border-radius:12px;margin-bottom:16px;">
-      </video>
-      <div class="modal-actions">
-        <button class="modal-btn-primary" id="btn-download-video">📥 Descargar Video</button>
-        <button class="modal-btn-secondary" id="btn-close-video">Cerrar</button>
-      </div>
-    `;
-    modalContent.querySelector('#btn-download-video').addEventListener('click', () => {
-      const a = document.createElement('a');
-      a.href     = url;
-      a.download = 'robert-estafa.webm';
-      a.click();
-    });
-    modalContent.querySelector('#btn-close-video').addEventListener('click', () => {
-      overlay.remove();
-      URL.revokeObjectURL(url);
-    });
-
-  } catch (err) {
-    console.error('Video error:', err);
-    overlay.remove();
-    showToast('❌ Error: ' + err.message);
-  }
-}
-
-
-/* ═══════════════════════════════════════════════════════════════
-   MODALS
-   ═══════════════════════════════════════════════════════════════ */
-function showImageModal(dataUrl) {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.innerHTML = `
-    <div class="modal-content">
-      <h3>🖼️ Imagen lista para compartir</h3>
-      <img src="${dataUrl}" alt="Resultado Robert" class="modal-image" />
-      <div class="modal-actions">
-        <button class="modal-btn-primary" id="modal-download-img">📥 Descargar</button>
-        <button class="modal-btn-secondary" id="modal-close">Cerrar</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-  
-  overlay.querySelector('#modal-download-img').addEventListener('click', () => {
-    const link = document.createElement('a');
-    link.download = `robert-estafa-${currentResult.score}pct.png`;
-    link.href = dataUrl;
-    link.click();
-  });
-  
-  overlay.querySelector('#modal-close').addEventListener('click', () => overlay.remove());
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.remove();
-  });
-}
-
-function showVideoModal() {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.innerHTML = `
-    <div class="modal-content">
-      <h3>🎥 Generando video TikTok…</h3>
-      <div class="video-progress">
-        <p>Creando animaciones…</p>
-        <div class="progress-bar-container">
-          <div class="progress-bar" id="video-progress-bar" style="width:0%"></div>
-        </div>
-        <p class="loading-percent" id="video-progress-pct">0%</p>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-}
 
 /* ═══════════════════════════════════════════════════════════════
    UTILITIES
@@ -1046,7 +840,7 @@ function resetToHome() {
   heroSection.classList.remove('hidden');
   
   messageInput.value = '';
-  charCount.textContent = '0 / 5,000';
+  charCount.textContent = '0 / 3,000';
   currentResult = null;
   
   window.scrollTo({ top: 0, behavior: 'smooth' });

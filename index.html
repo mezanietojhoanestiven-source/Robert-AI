@@ -72,9 +72,22 @@
           Pega el mensaje, link o conversación. Robert lo analiza con IA avanzada 
           y te muestra <strong>exactamente qué pasará</strong> si caes.
         </p>
+
+        <!-- REAL-TIME STATS TICKER -->
+        <div class="stats-ticker-container" id="stats-ticker">
+          <div class="stat-bubble">
+            <span class="stat-value" id="stat-total-analyses">...</span>
+            <span class="stat-label">Reportes Analizados</span>
+          </div>
+          <div class="stat-bubble highlight">
+            <span class="stat-value" id="stat-scams-detected">...</span>
+            <span class="stat-label">Estafas Detectadas</span>
+          </div>
+        </div>
         
         <!-- INPUT AREA -->
         <div class="input-container" id="input-container">
+          <!-- ... existing tabs ... -->
           <div class="input-tabs">
             <button class="input-tab active" data-tab="images" id="tab-images">
               📸 Capturas
@@ -92,6 +105,7 @@
               placeholder="Pega aquí el texto sospechoso (ej: mensaje de Telegram) o el link…"
               rows="4"
             ></textarea>
+            <span id="char-count" class="char-count">0 / 3,000</span>
           </div>
           <div class="image-upload-wrapper" id="image-upload-wrapper">
             <label for="image-upload" class="upload-area" id="upload-area">
@@ -103,6 +117,7 @@
           </div>
           
           <div class="victim-upload-wrapper" id="victim-upload-wrapper" style="display: none;">
+            <!-- ... existing victim form ... -->
             <div class="victim-form">
               <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.9rem;">
                 Si ya fuiste víctima, ingresa los datos del estafador. Robert compilará un Rastreo Geográfico Oficial (OSINT) que podrás imprimir o llevar a las autoridades policiales.
@@ -138,6 +153,17 @@
           <div class="privacy-notice">
             <span class="privacy-icon">🔒</span>
             <p><strong>Privacidad:</strong> Tus mensajes <strong>no se almacenan</strong> ni se usan para entrenar IA. Si la IA confirma una estafa, los identificadores (teléfonos, links) son guardados en la <strong>lista negra compartida de Robert</strong> para proteger a otras personas.</p>
+          </div>
+        </div>
+
+        <!-- RECENT DETECTIONS FEED -->
+        <div class="live-feed-section">
+          <div class="feed-header">
+            <span class="pulse-icon"></span>
+            <h4>Alertas Globales en Tiempo Real</h4>
+          </div>
+          <div class="feed-container" id="recent-scams-feed">
+            <div class="feed-placeholder">Cargando alertas de la comunidad...</div>
           </div>
         </div>
 
@@ -330,18 +356,6 @@
               <span class="share-icon">📱</span>
               Compartir en WhatsApp
             </button>
-            <button class="btn-share btn-image" id="btn-create-image">
-              <span class="share-icon">🖼️</span>
-              Crear imagen para compartir
-            </button>
-            <button class="btn-share btn-download" id="btn-download">
-              <span class="share-icon">📥</span>
-              Descargar resultado
-            </button>
-            <button class="btn-share btn-tiktok" id="btn-tiktok">
-              <span class="share-icon">🎥</span>
-              Generar video
-            </button>
           </div>
         </div>
 
@@ -479,8 +493,7 @@
     </div>
   </footer>
 
-  <!-- CANVAS OCULTO PARA GENERAR IMÁGENES -->
-  <canvas id="share-canvas" width="1080" height="1920" style="display:none;"></canvas>
+
 
   <!-- MODAL: ACERCA DE -->
   <div id="about-modal" class="modal-overlay hidden">
