@@ -241,12 +241,20 @@ app.post('/api/analyze', async (req, res) => {
     return res.status(200).json(jsonResult);
     
   } catch (error) {
-    console.error('Error detallado en /api/analyze:', error);
+    console.error('❌ Error en /api/analyze:', error);
     
-    // Si es un error de Groq (como rate limit o invalid model)
-    const errorMsg = error.message || 'Error desconocido';
+    let errorMsg = error.message || 'Error desconocido';
+    let statusCode = 500;
+
+    if (errorMsg.includes('413') || errorMsg.toLowerCase().includes('too large')) {
+      errorMsg = 'Las imágenes son demasiado pesadas para la IA. Intenta con menos capturas o imágenes más pequeñas.';
+      statusCode = 413;
+    } else if (errorMsg.includes('429')) {
+      errorMsg = 'Límite de velocidad alcanzado (Rate Limit). Espera unos segundos e intenta de nuevo.';
+      statusCode = 429;
+    }
     
-    return res.status(500).json({ 
+    return res.status(statusCode).json({ 
       error: 'Fallo al procesar el análisis con IA. Verifica logs o intenta de nuevo.',
       details: errorMsg,
       isVisionError: hasImages

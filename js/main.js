@@ -280,11 +280,11 @@ function handleImageSelection(e) {
 function addFiles(files) {
   // Relaxed verification in case mobile screenshots don't set proper image/ type
   const validFiles = files.filter(f => f.type.startsWith('image/') || f.name.match(/\.(jpg|jpeg|png|webp|heic)$/i) || f.type === "");
-  // Max 6 images
-  if (selectedImages.length + validFiles.length > 6) {
-    showToast('⚠️ Solo puedes subir hasta 6 capturas máximo');
+  // Max 5 images (Groq limit)
+  if (selectedImages.length + validFiles.length > 5) {
+    showToast('⚠️ Solo puedes subir hasta 5 capturas máximo');
   }
-  const toAdd = validFiles.slice(0, 6 - selectedImages.length);
+  const toAdd = validFiles.slice(0, 5 - selectedImages.length);
   selectedImages = [...selectedImages, ...toAdd];
   renderPreviews();
 }
@@ -453,6 +453,47 @@ function toBase64(file) {
   });
 }
 
+/**
+ * Comprime una imagen usando canvas para mantenerse bajo el límite de 4MB de Groq.
+ */
+function compressImage(file, maxWidth = 1200, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxWidth) {
+            width *= maxWidth / height;
+            height = maxWidth;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convertimos a JPEG con calidad controlada
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+}
+
 // Para usar la funcion global de remove
 window.removeImage = removeImage;
 
@@ -528,10 +569,10 @@ async function startAnalysis() {
 
   try {
     if (activeTab !== 'link') {
-      // 1. Convertir imágenes a Base64 para el análisis visual con Llama 3.2 Vision
-      showToast('📸 Preparando capturas para análisis visual...', 'info');
-      const base64Images = await Promise.all(selectedImages.map(file => toBase64(file)));
-      payload.images = base64Images;
+      // 1. Convertir y COMPRIMIR imágenes para el análisis visual (Groq limit: 4MB total)
+      showToast('📸 Procesando y comprimiendo capturas...', 'info');
+      const compressedImages = await Promise.all(selectedImages.map(file => compressImage(file)));
+      payload.images = compressedImages;
 
       // 2. Extraer texto con OCR local como apoyo (opcional, pero útil para highlights)
       try {
