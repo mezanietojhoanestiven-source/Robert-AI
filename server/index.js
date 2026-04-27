@@ -134,10 +134,10 @@ Estructura EXCLUSIVA del JSON:
   "explanations": [ { "icon": "🧠", "title": "Manipulación del miedo", "description": "Juegan con tu temor..." } ],
   "flaggedWords": ["transferencia", "urgente"],
   "extractedIdentifiers": ["+1234567890", "link-falso.com"],
-    "osint_location": "Nigeria"
+  "osint_location": "Nigeria"
 }
 
-Nota: "level" solo puede ser "ALTO", "MEDIO" o "BAJO". "color" de timeline: "green", "yellow", "red", "dark-red". Solo devuelve el JSON, NUNCA text markdown. Si es seguro, nivel BAJO, score bajo, y extractedIdentifiers vacío.
+Nota: Los campos "icon" DEBEN ser un EMOJI. "level" solo puede ser "ALTO", "MEDIO" o "BAJO". "color" de timeline: "green", "yellow", "red", "dark-red". Solo devuelve el JSON, NUNCA text markdown. Si es seguro, nivel BAJO, score bajo, y extractedIdentifiers vacío.
 `;
 
 app.post('/api/analyze', async (req, res) => {
@@ -271,9 +271,25 @@ app.post('/api/analyze', async (req, res) => {
     jsonResult.scamType = scamType;
 
     // Asegurar que las listas existan para evitar errores en el frontend
-    jsonResult.indicators = jsonResult.indicators || jsonResult.indicadores || [];
-    jsonResult.timeline = jsonResult.timeline || jsonResult.linea_tiempo || [];
-    jsonResult.explanations = jsonResult.explanations || jsonResult.explicaciones || [];
+    jsonResult.indicators = (jsonResult.indicators || jsonResult.indicadores || []).map(ind => ({
+      icon: ind.icon || ind.icono || "⚠️",
+      title: ind.title || ind.titulo || "Alerta",
+      description: ind.description || ind.descripcion || ""
+    }));
+
+    jsonResult.timeline = (jsonResult.timeline || jsonResult.linea_tiempo || []).map(item => ({
+      day: item.day || item.dia || "Evento",
+      title: item.title || item.titulo || "Suceso",
+      description: item.description || item.descripcion || "",
+      color: item.color || "red"
+    }));
+
+    jsonResult.explanations = (jsonResult.explanations || jsonResult.explicaciones || []).map(exp => ({
+      icon: exp.icon || exp.icono || "🔍",
+      title: exp.title || exp.titulo || "Detalle",
+      description: exp.description || exp.descripcion || ""
+    }));
+
     jsonResult.flaggedWords = jsonResult.flaggedWords || jsonResult.palabras_clave || [];
     jsonResult.extractedIdentifiers = jsonResult.extractedIdentifiers || jsonResult.identificadores || [];
     jsonResult.osint_location = jsonResult.osint_location || jsonResult.ubicacion || "Internacional";
