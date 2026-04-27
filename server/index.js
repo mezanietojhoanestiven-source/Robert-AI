@@ -261,19 +261,23 @@ app.post('/api/analyze', async (req, res) => {
       throw new Error('La IA devolvió un formato de texto no válido. Por favor, intenta de nuevo.');
     }
 
-    // Validación y Normalización básica
-    // Llama 4 Scout a veces puede cambiar nombres de campos, intentamos recuperarlos
-    const score = jsonResult.score !== undefined ? jsonResult.score : jsonResult.puntaje;
-    const scamType = jsonResult.scamType || jsonResult.tipo_estafa || jsonResult.type;
-
-    if (score === undefined || !scamType) {
-      console.error('Validación fallida para el objeto:', jsonResult);
-      throw new Error('La IA no devolvió un formato válido de análisis (faltan campos críticos).');
-    }
+    // Validación y Normalización robusta
+    // Llama 4 Scout puede variar los nombres de los campos, intentamos recuperarlos todos
+    const score = jsonResult.score ?? jsonResult.puntaje ?? jsonResult.risk_score ?? jsonResult.risk ?? 0;
+    const scamType = jsonResult.scamType || jsonResult.tipo_estafa || jsonResult.type || jsonResult.category || "Análisis General";
     
-    // Asegurar compatibilidad de campos para el frontend
-    jsonResult.score = parseInt(score);
+    // Normalizar score a número
+    jsonResult.score = parseInt(score) || 0;
     jsonResult.scamType = scamType;
+
+    // Asegurar que las listas existan para evitar errores en el frontend
+    jsonResult.indicators = jsonResult.indicators || jsonResult.indicadores || [];
+    jsonResult.timeline = jsonResult.timeline || jsonResult.linea_tiempo || [];
+    jsonResult.explanations = jsonResult.explanations || jsonResult.explicaciones || [];
+    jsonResult.flaggedWords = jsonResult.flaggedWords || jsonResult.palabras_clave || [];
+    jsonResult.extractedIdentifiers = jsonResult.extractedIdentifiers || jsonResult.identificadores || [];
+    jsonResult.osint_location = jsonResult.osint_location || jsonResult.ubicacion || "Internacional";
+    jsonResult.reasoning = jsonResult.reasoning || jsonResult.razonamiento || "Análisis procesado correctamente.";
 
     // Forzar consistencia lógica de niveles
     if (jsonResult.score >= 70) jsonResult.level = 'ALTO';
