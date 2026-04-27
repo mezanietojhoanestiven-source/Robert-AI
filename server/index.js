@@ -218,26 +218,60 @@ app.post('/api/analyze', async (req, res) => {
     });
   }
 
+  // Recordatorio final para forzar el formato
+  const jsonHint = `\n\nResponde EXCLUSIVAMENTE con el objeto JSON siguiendo esta estructura:
+  {
+    "reasoning": "...",
+    "score": 0-100,
+    "level": "ALTO/MEDIO/BAJO",
+    "scamType": "...",
+    "indicators": [],
+    "timeline": [],
+    "explanations": [],
+    "flaggedWords": [],
+    "extractedIdentifiers": [],
+    "osint_location": "..."
+  }`;
+  
+  userContent.push({ type: 'text', text: jsonHint });
+
   messagesPayload.push({ role: 'user', content: userContent });
 
   try {
     const chatCompletion = await groq.chat.completions.create({
       messages: messagesPayload,
       model: modelToUse,
-      temperature: 0.1, 
-      max_tokens: 2000,
+      temperature: 0, 
+      max_tokens: 3000,
       response_format: { type: "json_object" }
     });
 
-    const aiResponseContent = chatCompletion.choices[0]?.message?.content;
-    if (!aiResponseContent) throw new Error('Respuesta vacía desde Groq');
+    // Log de la respuesta cruda para depuración (visible en la consola del servidor)
+    console.log('--- RESPUESTA IA (RAW) ---');
+    console.log(aiResponseContent);
+    console.log('--------------------------');
 
-    const jsonResult = JSON.parse(aiResponseContent);
-
-    // Validación básica del formato esperado
-    if (jsonResult.score === undefined || !jsonResult.scamType) {
-      throw new Error('La IA no devolvió un formato válido de análisis.');
+    let jsonResult;
+    try {
+      jsonResult = JSON.parse(aiResponseContent);
+    } catch (parseError) {
+      console.error('Error al parsear JSON de la IA:', parseError);
+      throw new Error('La IA devolvió un formato de texto no válido. Por favor, intenta de nuevo.');
     }
+
+    // Validación y Normalización básica
+    // Llama 4 Scout a veces puede cambiar nombres de campos, intentamos recuperarlos
+    const score = jsonResult.score !== undefined ? jsonResult.score : jsonResult.puntaje;
+    const scamType = jsonResult.scamType || jsonResult.tipo_estafa || jsonResult.type;
+
+    if (score === undefined || !scamType) {
+      console.error('Validación fallida para el objeto:', jsonResult);
+      throw new Error('La IA no devolvió un formato válido de análisis (faltan campos críticos).');
+    }
+    
+    // Asegurar compatibilidad de campos para el frontend
+    jsonResult.score = parseInt(score);
+    jsonResult.scamType = scamType;
 
     // Forzar consistencia lógica de niveles
     if (jsonResult.score >= 70) jsonResult.level = 'ALTO';
