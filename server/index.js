@@ -84,7 +84,11 @@ async function updateOnAnalysis(result) {
     // Add to extracted identifiers (blacklist)
     if (result.extractedIdentifiers && result.extractedIdentifiers.length > 0) {
       const added = new Set(db.extractedIdentifiers);
-      result.extractedIdentifiers.forEach(id => added.add(id));
+      result.extractedIdentifiers.forEach(id => {
+        // Normalize: if it looks like a phone number, remove non-digits (except +)
+        const normalized = id.includes('@') || id.includes('http') ? id.trim() : id.replace(/[\s\-()]/g, '');
+        added.add(normalized);
+      });
       db.extractedIdentifiers = Array.from(added);
     }
 
@@ -101,13 +105,12 @@ async function updateOnAnalysis(result) {
   await saveDB(db);
 }
 
-const getSystemPrompt = (blacklistStr) => `
+const getSystemPrompt = (blacklistAlert) => `
 Eres "Robert", el agente de inteligencia artificial visual definitivo contra estafas y fraudes cibernéticos. 
 Tu misión es cazar estafadores analizando capturas de pantalla o textos. Posees un conocimiento profundo de psicología humana, manipulación emocional, y todas las técnicas de fraude.
 
-BASE DE DATOS DE ESTAFADORES YA REPORTADOS:
-[${blacklistStr}]
-Si ves algun usuario, correo o teléfono que coincide o se parece a los datos de esta lista negra en las imágenes/texto, levanta ALERTA MÁXIMA ROJA inmediatamente.
+${blacklistAlert}
+Si hay una alerta de lista negra arriba, levanta ALERTA MÁXIMA ROJA inmediatamente.
 
 Reglas de Análisis:
 1. Cadena de Pensamiento Obligatoria: Antes de dar un puntaje, DEBES generar tu análisis paso a paso en el campo oculto "reasoning". Busca tácticas de urgencia, manipulación, ofertas irreales, cuentas extrañas o enlaces sospechosos.
@@ -152,20 +155,58 @@ app.post('/api/analyze', async (req, res) => {
     return res.status(500).json({ error: 'La API Key de Groq no está configurada.' });
   }
 
-  // Leer memoria colectiva
+  // Leer memoria colectiva (blacklist)
   const blacklist = await getBlacklist();
-  const blacklistStr = blacklist.join(', ');
+  
+  // Verificación local previa
+  let matchFound = false;
+  let matchingIdentifier = "";
+  if (safeMessage) {
+    const identifiersInText = safeMessage.match(/[+\d\s-]{7,20}|@[a-zA-Z0-9._]+|https?:\/\/[^\s]+/g) || [];
+    for (const id of identifiersInText) {
+      const normalized = id.includes('@') || id.includes('http') ? id.trim() : id.replace(/[\s\-()]/g, '');
+      if (blacklist.includes(normalized)) {
+        matchFound = true;
+        matchingIdentifier = normalized;
+        break;
+      }
+    }
+  }
 
+  // ─── CONSTRUCCIÓN DEL PROMPT MULTIMODAL ───
+  const hasImages = images && images.length > 0;
+  // Usamos Llama 3.2 Vision si hay imágenes, o Llama 3.3 para texto puro
+  const modelToUse = hasImages ? 'llama-3.2-11b-vision-preview' : 'llama-3.3-70b-versatile';
+  
   const messagesPayload = [
-    { role: 'system', content: getSystemPrompt(blacklistStr) }
+    { 
+      role: 'system', 
+      content: getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : "") 
+    }
   ];
 
-  // Preparar contenido de texto
-  let userContent = "Analiza este texto extraído de capturas o provisto por el usuario: \n";
-  if (safeMessage) {
-    userContent += safeMessage;
-  } else {
-    userContent += "[No text provided]";
+  // Construir contenido del usuario
+  const userContent = [];
+  
+  // Agregar texto si existe
+  let textPrompt = "Analiza el siguiente contenido ";
+  textPrompt += hasImages ? "junto con las imágenes adjuntas. " : "proporcionado. ";
+  textPrompt += "Busca patrones de fraude, manipulación o estafa.\n\nContenido: ";
+  textPrompt += safeMessage || "[Sin texto, analizar solo imágenes]";
+  
+  userContent.push({ type: 'text', text: textPrompt });
+
+  // Agregar imágenes si existen (Groq soporta hasta 10 imágenes en 3.2 Vision)
+  if (hasImages) {
+    images.forEach((imgBase64) => {
+      // Si la imagen ya viene con el prefijo 'data:image/...;base64,', lo usamos. 
+      // Si no, asumimos que es base64 puro y le ponemos un prefijo genérico.
+      const url = imgBase64.startsWith('data:') ? imgBase64 : `data:image/png;base64,${imgBase64}`;
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: url }
+      });
+    });
   }
 
   messagesPayload.push({ role: 'user', content: userContent });
@@ -173,9 +214,9 @@ app.post('/api/analyze', async (req, res) => {
   try {
     const chatCompletion = await groq.chat.completions.create({
       messages: messagesPayload,
-      model: 'llama-3.3-70b-versatile',
+      model: modelToUse,
       temperature: 0.1, 
-      max_tokens: 3000,
+      max_tokens: 2000,
       response_format: { type: "json_object" }
     });
 
@@ -184,19 +225,15 @@ app.post('/api/analyze', async (req, res) => {
 
     const jsonResult = JSON.parse(aiResponseContent);
 
-    // Validación básica
+    // Validación básica del formato esperado
     if (jsonResult.score === undefined || !jsonResult.scamType) {
-      throw new Error('Formato JSON de Groq no válido');
+      throw new Error('La IA no devolvió un formato válido de análisis.');
     }
 
-    // Forzar consistencia lógica: si la IA se equivoca, la corregimos
-    if (jsonResult.score >= 70) {
-      jsonResult.level = 'ALTO';
-    } else if (jsonResult.score >= 40) {
-      jsonResult.level = 'MEDIO';
-    } else {
-      jsonResult.level = 'BAJO';
-    }
+    // Forzar consistencia lógica de niveles
+    if (jsonResult.score >= 70) jsonResult.level = 'ALTO';
+    else if (jsonResult.score >= 40) jsonResult.level = 'MEDIO';
+    else jsonResult.level = 'BAJO';
 
     // Actualizar estadísticas y memoria colectiva
     await updateOnAnalysis(jsonResult);
@@ -204,12 +241,45 @@ app.post('/api/analyze', async (req, res) => {
     return res.status(200).json(jsonResult);
     
   } catch (error) {
-    console.error('Error al comunicarse con Groq:', error);
+    console.error('Error detallado en /api/analyze:', error);
+    
+    // Si es un error de Groq (como rate limit o invalid model)
+    const errorMsg = error.message || 'Error desconocido';
+    
     return res.status(500).json({ 
-      error: 'Fallo al procesar el análisis visual con IA. Verifica logs.',
-      details: error.message
+      error: 'Fallo al procesar el análisis con IA. Verifica logs o intenta de nuevo.',
+      details: errorMsg,
+      isVisionError: hasImages
     });
   }
+});
+
+app.post('/api/report-victim', async (req, res) => {
+  const { phone, handle, location } = req.body;
+  
+  if (!phone && !handle) {
+    return res.status(400).json({ error: 'Faltan datos para el reporte' });
+  }
+
+  const db = await loadDB();
+  db.totalAnalyses = (db.totalAnalyses || 0) + 1;
+  db.scamsDetected = (db.scamsDetected || 0) + 1;
+
+  const added = new Set(db.extractedIdentifiers || []);
+  if (phone) added.add(phone.replace(/[\s\-()]/g, ''));
+  if (handle) added.add(handle.trim());
+  db.extractedIdentifiers = Array.from(added);
+
+  const newEntry = {
+    id: 'VIC-' + Date.now().toString(36),
+    type: '🚨 Reporte de Víctima',
+    location: location || "Internacional",
+    timestamp: new Date().toISOString()
+  };
+  db.recentScams = [newEntry, ...(db.recentScams || [])].slice(0, 10);
+
+  await saveDB(db);
+  res.json({ success: true });
 });
 
 app.get('/api/stats', async (req, res) => {

@@ -2111,6 +2111,55 @@ body {
   padding-top: 20px;
 }
 
+/* ─── TOAST NOTIFICATIONS ─── */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(22, 22, 31, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-glow);
+  color: var(--text-primary);
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 1000;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.error {
+  border-color: rgba(255, 26, 26, 0.5);
+  background: rgba(40, 10, 10, 0.95);
+}
+
+.toast.success {
+  border-color: rgba(0, 255, 136, 0.5);
+  background: rgba(10, 40, 20, 0.95);
+}
+
+@media (max-width: 600px) {
+  .toast {
+    width: 90%;
+    font-size: 0.85rem;
+    padding: 12px 16px;
+    bottom: 20px;
+  }
+}
+
 @media print {
   body * {
     visibility: hidden;

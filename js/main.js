@@ -429,14 +429,18 @@ async function startVictimOsint() {
     // Show report
     victimReportSection.classList.remove('hidden');
 
-    // Silently add to blacklist
-    if (phone) {
-      fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: `REPORTE VÍCTIMA. Número: ${phone}. Alias: ${handle || 'N/A'}. GPS: ${gpsCoords ? `${gpsCoords.lat},${gpsCoords.lng}` : 'N/A'}. Ubicación prefijo: ${locationStr}` })
-      }).catch(() => {});
-    }
+    // Silently add to blacklist using dedicated endpoint
+    fetch('/api/report-victim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        phone: phone, 
+        handle: handle,
+        location: osint ? osint.country : "Desconocido"
+      })
+    }).then(() => {
+      showToast('✅ Reporte enviado a la central de Robert', 'success');
+    }).catch(err => console.warn('Error en reporte silencioso:', err));
   }, 2500);
 }
 
@@ -473,6 +477,7 @@ async function extractTextFromImages(files) {
         // Si falla una imagen, intentamos seguir con las demás
       }
       URL.revokeObjectURL(url);
+      showToast(`👁️ Analizado: ${file.name.substring(0, 15)}...`, 'info');
     }
   } catch (e) {
     console.error('Error fatal al extraer texto:', e);
@@ -523,13 +528,19 @@ async function startAnalysis() {
 
   try {
     if (activeTab !== 'link') {
-      // Extraer texto de las capturas con OCR localmente
-      const extractedText = await extractTextFromImages(selectedImages);
-      
-      if (!extractedText || extractedText.length < 5) {
-        throw new Error('No se pudo leer texto en las imágenes. Intenta con fotos más claras.');
+      // 1. Convertir imágenes a Base64 para el análisis visual con Llama 3.2 Vision
+      showToast('📸 Preparando capturas para análisis visual...', 'info');
+      const base64Images = await Promise.all(selectedImages.map(file => toBase64(file)));
+      payload.images = base64Images;
+
+      // 2. Extraer texto con OCR local como apoyo (opcional, pero útil para highlights)
+      try {
+        const extractedText = await extractTextFromImages(selectedImages);
+        payload.message = extractedText;
+      } catch (ocrErr) {
+        console.warn('OCR local falló, continuando solo con visión:', ocrErr);
+        payload.message = ""; // El backend usará solo las imágenes
       }
-      payload = { message: extractedText };
     }
 
     // Run analysis and animation concurrently
@@ -779,6 +790,15 @@ function renderOSINT(result) {
   const hasIdentifiers = result.extractedIdentifiers && result.extractedIdentifiers.length > 0;
   const hasLocation = result.osint_location && result.osint_location.trim().length > 0;
   
+  // Highlight if it's a known scammer from blacklist (if backend provided reasoning hint)
+  if (result.reasoning && result.reasoning.includes('LISTA NEGRA')) {
+    osintSection.querySelector('.osint-warning').innerHTML = `
+      <span class="warning-icon">🔥</span>
+      <strong style="color:#ff1a1a;">ESTAFADOR CONFIRMADO:</strong> Este identificador ya está registrado en nuestra base de datos criminal.
+    `;
+    osintSection.querySelector('.osint-warning').style.background = 'rgba(255, 0, 0, 0.15)';
+  }
+  
   if (!hasIdentifiers && !hasLocation) {
     osintSection.classList.add('hidden');
     return;
@@ -877,28 +897,19 @@ function resetToHome() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function animateNumber(element, from, to, duration) {
-  const start = performance.now();
-  function update(now) {
-    const elapsed = now - start;
-    const progress = Math.min(elapsed / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const current = Math.round(from + (to - from) * eased);
-    element.textContent = current;
-    if (progress < 1) requestAnimationFrame(update);
-  }
-  requestAnimationFrame(update);
-}
-
-
-function showToast(message) {
-  // Remove existing toast
+function showToast(message, type = 'info') {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
   
   const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = message;
+  toast.className = `toast ${type}`;
+  
+  let icon = 'ℹ️';
+  if (type === 'error') icon = '❌';
+  if (type === 'success') icon = '✅';
+  if (type === 'warning') icon = '⚠️';
+  
+  toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
   document.body.appendChild(toast);
   
   requestAnimationFrame(() => {
@@ -908,7 +919,7 @@ function showToast(message) {
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 400);
-  }, 3000);
+  }, 4000);
 }
 
 function sleep(ms) {
@@ -923,4 +934,17 @@ function escapeHtml(text) {
 
 function escapeRegex(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function animateNumber(element, from, to, duration) {
+  const start = performance.now();
+  function update(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(from + (to - from) * eased);
+    element.textContent = current;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
 }
