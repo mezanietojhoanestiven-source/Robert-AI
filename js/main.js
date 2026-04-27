@@ -465,12 +465,22 @@ async function extractTextFromImages(files) {
     
     for (const file of files) {
       const url = URL.createObjectURL(file);
-      const result = await tesseractWorker.recognize(url);
-      combinedText += result.data.text + '\n';
+      try {
+        const result = await tesseractWorker.recognize(url);
+        combinedText += result.data.text + '\n';
+      } catch (err) {
+        console.error('Error procesando imagen individual:', err);
+        // Si falla una imagen, intentamos seguir con las demás
+      }
       URL.revokeObjectURL(url);
     }
   } catch (e) {
-    console.error('Error al extraer texto:', e);
+    console.error('Error fatal al extraer texto:', e);
+    // Si el worker muere, lo matamos del todo para que se recree en el próximo intento
+    if (tesseractWorker) {
+      await tesseractWorker.terminate();
+      tesseractWorker = null;
+    }
     throw new Error('Error en el motor de visión. Intenta de nuevo.');
   }
   
@@ -839,10 +849,31 @@ function resetToHome() {
   loadingSection.classList.add('hidden');
   heroSection.classList.remove('hidden');
   
+  // Limpiar inputs de texto
   messageInput.value = '';
   charCount.textContent = '0 / 3,000';
-  currentResult = null;
   
+  // Limpiar imágenes y previsualizaciones
+  selectedImages = [];
+  if (imagePreviewContainer) imagePreviewContainer.innerHTML = '';
+  if (imageUpload) imageUpload.value = '';
+  
+  // Limpiar sección Victim (OSINT)
+  if (victimUploadWrapper) {
+    const vPhone = document.getElementById('victim-phone');
+    const vHandle = document.getElementById('victim-handle');
+    const vPhoto = document.getElementById('victim-photo');
+    const vExifText = document.getElementById('exif-upload-text');
+    const vExifLabel = document.getElementById('exif-upload-label');
+    
+    if (vPhone) vPhone.value = '';
+    if (vHandle) vHandle.value = '';
+    if (vPhoto) vPhoto.value = '';
+    if (vExifText) vExifText.textContent = 'Toca para subir la foto del estafador';
+    if (vExifLabel) vExifLabel.classList.remove('has-file');
+  }
+
+  currentResult = null;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
