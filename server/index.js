@@ -374,7 +374,10 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   const hasImages = validatedImages.length > 0;
-  const modelToUse = hasImages ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
+  
+  // Para imágenes, usamos texto extraído por OCR + análisis de texto
+  // Esto es más confiable que modelos de visión API
+  const modelToUse = 'llama-3.3-70b-versatile';
   
   const systemPrompt = getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : '');
   
@@ -862,7 +865,10 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   const hasImages = validatedImages.length > 0;
-  const modelToUse = hasImages ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
+  
+  // Para imágenes, usamos texto extraído por OCR + análisis de texto
+  // Esto es más confiable que modelos de visión API
+  const modelToUse = 'llama-3.3-70b-versatile';
   
   const systemPrompt = getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : '');
   
