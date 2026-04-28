@@ -668,9 +668,9 @@ async function startAnalysis() {
     'Analizando manipulación emocional…',
     'Generando simulación predictiva…'
   ] : [
-    'Procesando capturas con Visión Artificial…',
-    'Comparando con la base de datos global…',
-    'Analizando manipulación visual…',
+    'Extrayendo texto de imágenes con OCR…',
+    'Comparando con base de datos global…',
+    'Analizando patrones de fraude…',
     'Generando dictamen predictivo…'
   ];
   const stepElements = document.querySelectorAll('.loading-step .step-text');
@@ -684,22 +684,23 @@ async function startAnalysis() {
       const [_, analysisResult] = await Promise.all([
         runLoadingAnimation(),
         (async () => {
-          // 1. Convertir y COMPRIMIR imágenes para el análisis visual (Groq limit: 4MB total)
-          showToast('📸 Procesando y comprimiendo capturas...', 'info');
+          // 1. Convertir y comprimir imágenes (para mostrar previews)
+          showToast('📸 Procesando capturas...', 'info');
           const compressedImages = await Promise.all(selectedImages.map(file => compressImage(file)));
-          payload.images = compressedImages;
-
-          // 2. Extraer texto con OCR local como apoyo
+          
+          // 2. Extraer texto con OCR local - ESTE ES EL TEXTO QUE SE ANALIZA
+          let extractedText = "";
           try {
-            const extractedText = await extractTextFromImages(selectedImages);
-            payload.message = extractedText;
+            showToast('👁️ Extrayendo texto con OCR...', 'info');
+            extractedText = await extractTextFromImages(selectedImages);
+            showToast('✅ Texto extraído - analizando con IA...', 'info');
           } catch (ocrErr) {
-            console.warn('OCR local falló, continuando solo con visión:', ocrErr);
-            payload.message = "";
+            console.warn('OCR local falló:', ocrErr);
           }
 
-          // 3. Send to backend for analysis
-          return await analyzeData(payload);
+          // 3. Enviar SOLO el texto extraído al backend (sin imágenes)
+          // Esto evita el error del modelo de visión de Groq
+          return await analyzeData({ message: extractedText });
         })()
       ]);
       
