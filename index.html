@@ -174,25 +174,34 @@
     <!-- ═══════════════════════════════════════════════ -->
     <section class="section" id="how-it-works-section" style="padding-top: 0; margin-bottom: 20px;">
       <div class="container">
-        <h3 class="section-title text-center" style="justify-content: center; margin-bottom: 40px; font-size: 1.8rem;">
+        <h3 class="section-title text-center" style="justify-content: center; margin-bottom: 15px; font-size: 1.8rem;">
           <span class="title-icon">⚙️</span> ¿Cómo funciona Robert AI?
         </h3>
+        <p style="text-align:center; color:var(--text-secondary); max-width:700px; margin:0 auto 40px; line-height:1.7;">
+          Robert combina modelos de lenguaje de última generación (LLM) con una base de datos colectiva de estafadores reportados por la comunidad. Cada análisis pasa por múltiples capas de verificación antes de emitir un veredicto.
+        </p>
         <div class="how-it-works-grid">
           <div class="step-card">
             <div class="step-icon-wrapper">1</div>
-            <h4>Copias y Pegas</h4>
-            <p>Sube la captura de pantalla de ese WhatsApp extraño o pega el link / texto del correo que te enviaron.</p>
+            <h4>Envías el contenido sospechoso</h4>
+            <p>Puedes subir <strong>capturas de pantalla</strong> de WhatsApp, Telegram o SMS, pegar el <strong>texto completo</strong> de un correo electrónico sospechoso, o incluso introducir un <strong>enlace</strong> que alguien te compartió. Robert acepta hasta 6 imágenes simultáneas y textos de hasta 3,000 caracteres.</p>
           </div>
           <div class="step-card">
             <div class="step-icon-wrapper">2</div>
-            <h4>Análisis Neuronal</h4>
-            <p>Nuestra IA escanea el lenguaje buscando tácticas de manipulación psicológica, urgencia falsa o enlaces de phishing.</p>
+            <h4>Análisis Neuronal Multicapa</h4>
+            <p>La IA ejecuta un escaneo profundo del mensaje analizando <strong>tácticas de manipulación psicológica</strong> (urgencia falsa, miedo, ofertas irreales), <strong>patrones lingüísticos</strong> asociados a fraudes conocidos, y <strong>enlaces o números de teléfono</strong> contra nuestra Lista Negra global alimentada por miles de reportes previos.</p>
           </div>
           <div class="step-card">
             <div class="step-icon-wrapper">3</div>
-            <h4>Predicción Exacta</h4>
-            <p>Robert te muestra un dictamen claro y una advertencia realista de lo que pasaría si decides enviar el dinero.</p>
+            <h4>Veredicto + Simulación Predictiva</h4>
+            <p>Robert emite un <strong>puntaje de riesgo del 0 al 100%</strong>, identifica el <strong>tipo exacto de estafa</strong> (phishing, pirámide, extorsión, etc.), y genera una <strong>línea de tiempo predictiva</strong> mostrándote paso a paso qué pasaría si caes en la trampa. También extrae los identificadores del estafador y los registra en la lista negra compartida.</p>
           </div>
+        </div>
+
+        <div style="margin-top:35px; padding:25px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px;">
+          <h4 style="color:var(--primary-light); margin-bottom:12px;">🛡️ Tecnología detrás de Robert</h4>
+          <p style="color:var(--text-secondary); line-height:1.7; margin-bottom:10px;">Robert utiliza modelos de Inteligencia Artificial multimodales de última generación (Llama 4 Scout y Llama 3.3 70B) capaces de analizar tanto texto como imágenes simultáneamente. Esto significa que puede "leer" capturas de pantalla de conversaciones de WhatsApp o Telegram directamente, sin necesidad de que transcribas el mensaje.</p>
+          <p style="color:var(--text-secondary); line-height:1.7;">Además, cada análisis contribuye a una <strong>memoria colectiva</strong>: cuando Robert confirma una estafa, los números de teléfono, enlaces y alias del estafador son automáticamente añadidos a una base de datos compartida. Esto significa que si otro usuario recibe un mensaje del mismo estafador, Robert lo detectará instantáneamente con alerta máxima.</p>
         </div>
       </div>
     </section>
@@ -203,27 +212,47 @@
     <section class="section" id="examples-section" style="margin-bottom: 20px;">
       <div class="container">
         <h3 class="section-title text-center" style="justify-content: center; margin-bottom: 40px; font-size: 1.8rem;">
-          <span class="title-icon">🕵️</span> Ejemplos de Estafas Detectadas
+          <span class="title-icon">🕵️</span> Ejemplos de Estafas Detectadas por Robert
         </h3>
         <div class="examples-grid">
           <div class="example-card">
             <div class="example-header">
               <span class="example-type bg-red">Phishing Bancario</span>
-              <span class="example-status">🔴 Bloqueado</span>
+              <span class="example-status">🔴 95% Riesgo</span>
             </div>
             <p class="example-text">"Su cuenta de Bancolombia ha sido bloqueada por seguridad. Para reactivar, ingrese sus datos aquí: http://banco-seguro-login.com"</p>
             <div class="example-ai-response">
-              <strong>Veredicto AI:</strong> Detecta urgencia falsa y un domino web fraudulento que no pertenece a la entidad oficial. Riesgo de robo total.
+              <strong>Veredicto AI:</strong> Detecta urgencia falsa y un dominio web fraudulento que no pertenece a la entidad oficial. El enlace redirige a una página clonada diseñada para robar credenciales bancarias. Riesgo de robo total de fondos.
             </div>
           </div>
           <div class="example-card">
             <div class="example-header">
-              <span class="example-type bg-orange">La Tarea de TikTok</span>
-              <span class="example-status">🔴 Bloqueado</span>
+              <span class="example-type bg-orange">Task-Scam de TikTok</span>
+              <span class="example-status">🔴 92% Riesgo</span>
             </div>
             <p class="example-text">"Gana $50.000 diarios solo por darle like a videos de TikTok. Escríbenos a este número para comenzar a trabajar."</p>
             <div class="example-ai-response">
-              <strong>Veredicto AI:</strong> Típico modelo piramidal Task-Scam. Pagarán pequeñas sumas al inicio y luego exigirán "inversiones" masivas y desaparecerán.
+              <strong>Veredicto AI:</strong> Típico modelo piramidal Task-Scam. Pagarán pequeñas sumas al inicio para generar confianza, luego exigirán "inversiones" masivas prometiendo retornos enormes, y finalmente desaparecerán con tu dinero.
+            </div>
+          </div>
+          <div class="example-card">
+            <div class="example-header">
+              <span class="example-type bg-red">Falso Soporte Técnico</span>
+              <span class="example-status">🔴 88% Riesgo</span>
+            </div>
+            <p class="example-text">"Detectamos actividad inusual en su dispositivo. Llame al 018000-XXXX inmediatamente o su información será comprometida en 24 horas."</p>
+            <div class="example-ai-response">
+              <strong>Veredicto AI:</strong> Estafa de soporte técnico falso. Usan miedo y urgencia artificial para que llames a un número donde pedirán acceso remoto a tu computador o datos de tarjeta de crédito.
+            </div>
+          </div>
+          <div class="example-card">
+            <div class="example-header">
+              <span class="example-type bg-orange">Inversión Cripto Falsa</span>
+              <span class="example-status">🔴 97% Riesgo</span>
+            </div>
+            <p class="example-text">"Hola! Soy analista de Binance. Tengo una estrategia que genera $500 USD diarios con solo $100 de inversión inicial. ¿Te interesa?"</p>
+            <div class="example-ai-response">
+              <strong>Veredicto AI:</strong> Fraude de inversión con suplantación de plataforma legítima. Ningún empleado real de Binance contacta por WhatsApp con promesas de ganancias garantizadas. El dinero invertido es irrecuperable.
             </div>
           </div>
         </div>
@@ -241,15 +270,53 @@
         <div class="faq-accordion">
           <div class="faq-item">
             <h4 class="faq-question">¿Qué es Robert y por qué es gratuito?</h4>
-            <p class="faq-answer">Robert es un proyecto social impulsado por Inteligencia Artificial para detener los fraudes electrónicos. Es gratis porque creemos en la seguridad comunitaria, operando únicamente gracias a donaciones voluntarias de usuarios agradecidos y pequeños bloques publicitarios.</p>
+            <p class="faq-answer">Robert es un proyecto social de ciberseguridad impulsado por Inteligencia Artificial, creado para proteger a las personas de fraudes electrónicos en Latinoamérica y el mundo. Es completamente gratuito porque creemos que la seguridad digital no debería tener costo. El proyecto se sostiene mediante donaciones voluntarias de usuarios agradecidos y pequeños bloques publicitarios que nos permiten cubrir los costos de los servidores de IA.</p>
           </div>
           <div class="faq-item">
             <h4 class="faq-question">¿Guardan mis capturas o mis números de teléfono?</h4>
-            <p class="faq-answer">No. Nuestra política de privacidad estricta asegura que ningún texto íntimo o captura personal se almacene en nuestros servidores. Únicamente extraemos el "número de teléfono o enlace del estafador" para añadirlo a nuestra Lista Negra pública global.</p>
+            <p class="faq-answer">No. Nuestra política de privacidad es estricta: ningún texto, captura personal ni dato íntimo se almacena en nuestros servidores después del análisis. Lo único que Robert extrae y conserva son los identificadores del estafador (número de teléfono, enlace malicioso o alias) para añadirlos a la Lista Negra pública global, protegiendo así a futuras víctimas potenciales.</p>
           </div>
           <div class="faq-item">
             <h4 class="faq-question">¿Qué tan preciso es el análisis de la IA?</h4>
-            <p class="faq-answer">Logramos una precisión superior al 95%. La IA está entrenada con miles de modus operandi criminales: ingeniería social, falsas extorsiones, "paquetes retenidos", falsos inversores cripto, entre otros. Sin embargo, en caso de dudas, siempre recomendamos cortar la comunicación y contactar directamente a la entidad oficial.</p>
+            <p class="faq-answer">Robert logra una precisión superior al 95% en la detección de estafas conocidas. La IA está especializada en miles de modus operandi criminales: ingeniería social, falsas extorsiones, "paquetes retenidos en aduanas", falsos inversores cripto y esquemas piramidales, entre muchos otros. Sin embargo, recomendamos que ante la menor duda, cortes toda comunicación con el sospechoso y contactes directamente a la entidad oficial involucrada.</p>
+          </div>
+          <div class="faq-item">
+            <h4 class="faq-question">¿Puedo analizar capturas de pantalla de WhatsApp o Telegram?</h4>
+            <p class="faq-answer">¡Sí! Robert cuenta con tecnología de visión artificial multimodal que puede leer y analizar directamente las capturas de pantalla de tus conversaciones. No necesitas transcribir el mensaje: solo sube la imagen y la IA extraerá el texto, detectará patrones de fraude y emitirá su veredicto automáticamente.</p>
+          </div>
+          <div class="faq-item">
+            <h4 class="faq-question">¿Qué es el reporte OSINT de "Fui Estafado"?</h4>
+            <p class="faq-answer">Si ya fuiste víctima de una estafa, Robert puede generar un Dossier de Investigación OSINT (Open Source Intelligence) con los datos del estafador. Este reporte incluye el rastreo geográfico del número telefónico por su prefijo internacional, extracción de coordenadas GPS de fotos enviadas por el estafador (si tienen metadatos), y un documento PDF que puedes presentar ante las autoridades policiales como apoyo inicial para tu denuncia formal.</p>
+          </div>
+          <div class="faq-item">
+            <h4 class="faq-question">¿Robert funciona en todos los países?</h4>
+            <p class="faq-answer">Sí. Robert analiza mensajes en español y tiene una base de datos de prefijos telefónicos de más de 200 países. La herramienta funciona para detectar estafas originadas en cualquier parte del mundo. Nuestra comunidad de usuarios reporta estafas desde Colombia, México, Argentina, España, Perú, Chile, Ecuador, Venezuela y muchos más países.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SOBRE NOSOTROS                                 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="section" id="about-section">
+      <div class="container">
+        <h3 class="section-title text-center" style="justify-content: center; margin-bottom: 40px; font-size: 1.8rem;">
+          <span class="title-icon">👤</span> Sobre Nosotros
+        </h3>
+        <div style="max-width:800px; margin:0 auto; background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px; padding:35px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+          <div style="display:flex; align-items:center; gap:20px; margin-bottom:25px; flex-wrap:wrap;">
+            <img src="/logo.png" alt="Robert Logo" style="width:70px; height:70px; border-radius:50%; box-shadow:0 0 20px rgba(0,255,200,0.4);">
+            <div>
+              <h4 style="color:var(--text-primary); margin:0; font-size:1.3rem;">Robert AI — Detector de Estafas</h4>
+              <p style="color:var(--primary-color); margin:5px 0 0; font-size:0.95rem;">Creado por Johan Estiben</p>
+            </div>
+          </div>
+          <p style="color:var(--text-secondary); line-height:1.8; margin-bottom:15px;">Robert nació de una experiencia personal. Su creador, <strong style="color:var(--text-primary);">Johan Estiben</strong>, fue víctima de una estafa cibernética y, frustrado por la falta de herramientas accesibles para prevenirlas, decidió usar Inteligencia Artificial para crear una solución real. Así nació Robert: un defensor digital gratuito que analiza mensajes, capturas de pantalla y enlaces sospechosos para proteger a las personas antes de que pierdan su dinero.</p>
+          <p style="color:var(--text-secondary); line-height:1.8; margin-bottom:25px;">Nuestra misión es democratizar la ciberseguridad en Latinoamérica y el mundo hispanohablante, ofreciendo tecnología de vanguardia de forma gratuita. Cada día, Robert aprende de los reportes de la comunidad y fortalece su base de datos de estafadores conocidos, creando una red de protección que beneficia a todos los usuarios.</p>
+          <div style="border-top:1px solid var(--border-color); padding-top:20px;">
+            <p style="color:var(--text-secondary); font-size:0.95rem; margin-bottom:8px;"><strong style="color:var(--text-primary);">📧 Contacto:</strong> robertai.soporte@gmail.com</p>
+            <p style="color:var(--text-secondary); font-size:0.95rem;"><strong style="color:var(--text-primary);">🌎 Cobertura:</strong> Global — Especializado en Latinoamérica</p>
           </div>
         </div>
       </div>

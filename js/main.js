@@ -17,6 +17,7 @@ const safeSection       = document.getElementById('safe-section');
 const howItWorksSection = document.getElementById('how-it-works-section');
 const examplesSection   = document.getElementById('examples-section');
 const faqSection        = document.getElementById('faq-section');
+const aboutSection      = document.getElementById('about-section');
 
 const messageInput      = document.getElementById('message-input');
 const charCount         = document.getElementById('char-count');
@@ -362,6 +363,7 @@ async function startVictimOsint() {
   if (howItWorksSection) howItWorksSection.classList.add('hidden');
   if (examplesSection) examplesSection.classList.add('hidden');
   if (faqSection) faqSection.classList.add('hidden');
+  if (aboutSection) aboutSection.classList.add('hidden');
   loadingSection.classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
   
@@ -1007,6 +1009,7 @@ function resetToHome() {
   if (howItWorksSection) howItWorksSection.classList.remove('hidden');
   if (examplesSection) examplesSection.classList.remove('hidden');
   if (faqSection) faqSection.classList.remove('hidden');
+  if (aboutSection) aboutSection.classList.remove('hidden');
   
   // Limpiar inputs de texto
   messageInput.value = '';
