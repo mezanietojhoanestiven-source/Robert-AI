@@ -317,38 +317,119 @@ Nota: Los campos "icon" DEBEN ser un EMOJI. "level" solo puede ser "ALTO", "MEDI
 `;
 
 // ============================================
-// API: Endpoint de análisis principal
+// API: Endpoint de análisis principal - SOLO TEXTO
 // ============================================
 app.post('/api/analyze', async (req, res) => {
+  const startTime = Date.now();
+  const requestId = crypto.randomUUID().substring(0, 8);
   
-  // Para imágenes, usamos texto extraído por OCR + análisis de texto
-  // Esto es más confiable que modelos de visión API
+  log('INFO', `Análisis iniciado`, { requestId });
+  
+  const { message } = req.body;
+
+  // SOLO aceptamos texto - el OCR se hace en el frontend
+  if (!message || typeof message !== 'string' || message.trim() === '') {
+    return res.status(400).json({ error: 'Debes proporcionar texto para analizar' });
+  }
+
+  const safeMessage = sanitizeInput(message);
+
+  // Verificar blacklist local
+  const blacklist = getBlacklist();
+  let matchFound = false;
+  let matchingIdentifier = '';
+  
+  if (safeMessage) {
+    const identifiersInText = safeMessage.match(/[+\d\s-]{7,20}|@[a-zA-Z0-9._]+|https?:\/\/[^\s]+/g) || [];
+    for (const id of identifiersInText) {
+      const normalized = id.includes('@') || id.includes('http') ? id.trim() : id.replace(/[\s\-()]/g, '');
+      if (blacklist.includes(normalized)) {
+        matchFound = true;
+        matchingIdentifier = normalized;
+        break;
+      }
+    }
+  }
+  
+  // Siempre usamos modelo de texto - NO imágenes
   const modelToUse = 'llama-3.3-70b-versatile';
   
   const systemPrompt = getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : '');
   
-  const messagesPayload = [];
+  const messagesPayload = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: `Analiza el siguiente contenido. Busca patrones de fraude, manipulación o estafa. DEBES RESPONDER SOLO EN FORMATO JSON.\n\nContenido: ${safeMessage}` }
+  ];
 
-  if (!hasImages) {
-    messagesPayload.push({ role: 'system', content: systemPrompt });
-  }
+  try {
+    const chatCompletion = await groq.chat.completions.create({
+      messages: messagesPayload,
+      model: modelToUse,
+      temperature: 0, 
+      max_tokens: 3000,
+      response_format: { type: "json_object" }
+    });
 
-  const userContent = [];
-  
-  if (hasImages) {
-    userContent.push({ 
-      type: 'text', 
-      text: "INSTRUCCIONES DE SISTEMA:\n" + systemPrompt + "\n\nMENSAJE DEL USUARIO A ANALIZAR:\n" 
+    const aiResponseContent = chatCompletion.choices[0]?.message?.content || "{}";
+
+    let jsonResult;
+    try {
+      jsonResult = JSON.parse(aiResponseContent);
+    } catch (parseError) {
+      log('ERROR', 'Error parseando respuesta de IA', { requestId, error: parseError.message });
+      throw new Error('La IA devolvió un formato de texto no válido.');
+    }
+
+    const score = jsonResult.score ?? jsonResult.puntaje ?? jsonResult.risk_score ?? 0;
+    const scamType = jsonResult.scamType || jsonResult.tipo_estafa || "Análisis General";
+    
+    jsonResult.score = parseInt(score) || 0;
+    jsonResult.scamType = scamType;
+
+    jsonResult.indicators = (jsonResult.indicators || []).map(ind => ({
+      icon: ind.icon || "⚠️",
+      title: ind.title || "Alerta",
+      description: ind.description || ""
+    }));
+
+    jsonResult.timeline = (jsonResult.timeline || []).map(item => ({
+      day: item.day || "Evento",
+      title: item.title || "Suceso",
+      description: item.description || "",
+      color: item.color || "red"
+    }));
+
+    jsonResult.explanations = (jsonResult.explanations || []).map(exp => ({
+      icon: exp.icon || "🔍",
+      title: exp.title || "Detalle",
+      description: exp.description || ""
+    }));
+
+    jsonResult.flaggedWords = jsonResult.flaggedWords || [];
+    jsonResult.extractedIdentifiers = jsonResult.extractedIdentifiers || [];
+    jsonResult.osint_location = jsonResult.osint_location || "Internacional";
+    jsonResult.reasoning = jsonResult.reasoning || "Análisis procesado correctamente.";
+
+    if (jsonResult.score >= 70) jsonResult.level = 'ALTO';
+    else if (jsonResult.score >= 40) jsonResult.level = 'MEDIO';
+    else jsonResult.level = 'BAJO';
+
+    recordAnalysis(jsonResult.score, jsonResult.level, jsonResult.scamType, jsonResult.extractedIdentifiers);
+    
+    const duration = Date.now() - startTime;
+    log('INFO', 'Análisis completado', { requestId, score: jsonResult.score, level: jsonResult.level, duration });
+
+    return res.status(200).json(jsonResult);
+    
+  } catch (error) {
+    log('ERROR', 'Error en análisis', { requestId, error: error.message });
+    
+    return res.status(500).json({ 
+      error: 'Fallo al procesar el análisis con IA.',
+      details: error.message
     });
   }
-
-  let textPrompt = "Analiza el siguiente contenido proporcionado. ";
-  textPrompt += "Busca patrones de fraude, manipulación o estafa. DEBES RESPONDER SOLO EN FORMATO JSON.\n\nContenido: ";
-  textPrompt += safeMessage || "[Sin texto para analizar]";
-  
-  userContent.push({ type: 'text', text: textPrompt });
-
-  // NO se envían imágenes - el OCR se hace en el frontend
+});
 
   const jsonHint = `\n\nResponde EXCLUSIVAMENTE con el objeto JSON siguiendo esta estructura:
   {
