@@ -273,8 +273,9 @@ function bindEvents() {
   btnNewAnalysis.addEventListener('click', resetToHome);
   btnNewAnalysisSafe.addEventListener('click', resetToHome);
 
-  // Share buttons
   btnShareWhatsapp.addEventListener('click', shareWhatsApp);
+  document.getElementById('btn-share-telegram')?.addEventListener('click', shareTelegram);
+  document.getElementById('btn-share-twitter')?.addEventListener('click', shareTwitter);
 
 }
 
@@ -944,6 +945,28 @@ function shareWhatsApp() {
     `\n\n#NoTeDejesEstafar #Robert`;
   
   const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+}
+
+function shareTelegram() {
+  if (!currentResult) return;
+  
+  const text = `🚨 ALERTA DE ESTAFA 🚨\n\n` +
+    `Analicé un mensaje sospechoso con Robert: Detector de Estafas\n\n` +
+    `📊 Riesgo: ${currentResult.score}% (${currentResult.level})\n` +
+    `🎣 Tipo: ${currentResult.scamType}\n\n` +
+    `🛡️ Analiza tus mensajes en:` +
+    `\n${window.location.href}`;
+  
+  const url = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+}
+
+function shareTwitter() {
+  if (!currentResult) return;
+  
+  const text = `🚨 ALERTA DE ESTAFA: Analicé un mensaje con Robert AI y el riesgo es del ${currentResult.score}%.\n\nProtege tus ahorros aquí 👇\n#NoTeDejesEstafar #RobertAI`;
+  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`;
   window.open(url, '_blank');
 }
 

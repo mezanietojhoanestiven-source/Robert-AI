@@ -175,8 +175,8 @@ app.post('/api/analyze', async (req, res) => {
 
   // ─── CONSTRUCCIÓN DEL PROMPT MULTIMODAL ───
   const hasImages = images && images.length > 0;
-  // Usamos Llama 4 Scout para imágenes (Llama 3.2 vision fue retirado), o Llama 3.3 para texto puro
-  const modelToUse = hasImages ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
+  // Usamos Llama 3.2 Vision para imágenes y Llama 3.3 para texto puro (Modelos reales de Groq)
+  const modelToUse = hasImages ? 'llama-3.2-11b-vision-preview' : 'llama-3.3-70b-versatile';
   
   const systemPrompt = getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : "");
   
@@ -262,7 +262,7 @@ app.post('/api/analyze', async (req, res) => {
     }
 
     // Validación y Normalización robusta
-    // Llama 4 Scout puede variar los nombres de los campos, intentamos recuperarlos todos
+    // Llama 3.2 Vision puede variar los nombres de los campos, intentamos recuperarlos todos
     const score = jsonResult.score ?? jsonResult.puntaje ?? jsonResult.risk_score ?? jsonResult.risk ?? 0;
     const scamType = jsonResult.scamType || jsonResult.tipo_estafa || jsonResult.type || jsonResult.category || "Análisis General";
     
@@ -372,9 +372,15 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'ok', message: 'Robert AI Vision & Memory Backend funcionando' });
 });
 
-// Sirve el archivo ads.txt explícitamente para Google AdSense
+// Sirve archivos críticos explícitamente para SEO y Google AdSense
 app.get('/ads.txt', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/ads.txt'));
+});
+app.get('/robots.txt', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/robots.txt'));
+});
+app.get('/sitemap.xml', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/sitemap.xml'));
 });
 
 // Sirve los archivos estáticos construidos por Vite

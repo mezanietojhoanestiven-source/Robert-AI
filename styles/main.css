@@ -1171,17 +1171,28 @@ body {
   background: linear-gradient(135deg, #25d366, #128c7e);
   border-color: transparent;
   color: white;
-  grid-column: 1 / -1;
 }
 
-.btn-whatsapp:hover {
-  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
+.btn-telegram {
+  background: linear-gradient(135deg, #0088cc, #006699);
+  border-color: transparent;
+  color: white;
 }
 
-.btn-image:hover {
-  border-color: var(--red-border);
-  box-shadow: var(--shadow-glow-red);
+.btn-twitter {
+  background: #000000;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
 }
+
+.btn-share:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.btn-whatsapp:hover { box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3); }
+.btn-telegram:hover { box-shadow: 0 8px 25px rgba(0, 136, 204, 0.3); }
+.btn-twitter:hover { box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1); }
 
 .btn-download:hover {
   border-color: rgba(100, 100, 255, 0.3);
