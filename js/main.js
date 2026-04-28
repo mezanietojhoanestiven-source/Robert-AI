@@ -148,10 +148,11 @@ function bindEvents() {
   const aboutModal = document.getElementById('about-modal');
   const donateModal = document.getElementById('donate-modal');
   
-  if (btnAbout && aboutModal) {
-    btnAbout.addEventListener('click', () => aboutModal.classList.remove('hidden'));
-    document.getElementById('modal-close-about')?.addEventListener('click', () => aboutModal.classList.add('hidden'));
-    aboutModal.addEventListener('click', (e) => { if (e.target === aboutModal) aboutModal.classList.add('hidden'); });
+  if (btnAbout) {
+    btnAbout.addEventListener('click', () => {
+      const target = document.getElementById('about-section');
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
   }
   
   if (btnDonate && donateModal) {
