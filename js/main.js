@@ -185,12 +185,40 @@ function bindEvents() {
 
   sideMenuLinks.forEach(link => {
     link.addEventListener('click', (e) => {
-      e.preventDefault();
       const href = link.getAttribute('href');
-      if (href && href !== '/' && href !== '#') {
-        window.location.href = href;
+      const target = link.getAttribute('target');
+      
+      // Map routes to modal types
+      const legalRoutes = {
+        'privacy': 'privacy',
+        'terms': 'terms',
+        'cookies': 'cookies',
+        'how-it-works': 'how',
+        'faq': 'faq',
+        'about': 'about'
+      };
+
+      for (const [route, type] of Object.entries(legalRoutes)) {
+        if (href && href.includes(route)) {
+          e.preventDefault();
+          toggleMenu(false);
+          showLegalModal(type);
+          return;
+        }
       }
-      toggleMenu(false);
+
+      // Only intercept internal navigation links (no _blank)
+      if (!target && href && href !== '/' && href !== '#') {
+        e.preventDefault();
+        toggleMenu(false);
+        window.location.href = href;
+      } else if (href === '/') {
+        e.preventDefault();
+        toggleMenu(false);
+      } else {
+        // For target="_blank" links, let the browser handle it naturally
+        toggleMenu(false);
+      }
     });
   });
   
@@ -200,15 +228,54 @@ function bindEvents() {
     donateModal.addEventListener('click', (e) => { if (e.target === donateModal) donateModal.classList.add('hidden'); });
   }
 
-  // Payment Handlers
-  const paymentBtns = document.querySelectorAll('.btn-payment');
-  paymentBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (typeof showToast === 'function') {
-        showToast('💙 Abriendo pasarela segura de Mercado Pago...');
+  // Legal Modal logic
+  const legalModal = document.getElementById('legal-modal');
+  const btnCloseLegal = document.getElementById('modal-close-legal');
+  
+  if (btnCloseLegal && legalModal) {
+    btnCloseLegal.addEventListener('click', () => legalModal.classList.add('hidden'));
+    legalModal.addEventListener('click', (e) => { if (e.target === legalModal) legalModal.classList.add('hidden'); });
+  }
+
+  // Intercept all footer legal links
+  document.querySelectorAll('footer a, .consent-link, #main-header .nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const href = link.getAttribute('href');
+      const legalRoutes = {
+        'privacy': 'privacy',
+        'terms': 'terms',
+        'cookies': 'cookies',
+        'how-it-works': 'how',
+        'faq': 'faq',
+        'about': 'about'
+      };
+
+      for (const [route, type] of Object.entries(legalRoutes)) {
+        if (href && href.includes(route)) {
+          e.preventDefault();
+          showLegalModal(type);
+          return;
+        }
       }
     });
   });
+
+  // Payment Handlers (Mercado Pago Link)
+  const paymentBtns = document.querySelectorAll('.btn-payment');
+  paymentBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const donationLink = 'https://link.mercadopago.com.co/robertai';
+      if (typeof showToast === 'function') {
+        showToast('💙 Abriendo pasarela segura de Mercado Pago...');
+      }
+      // PequeÃ±o delay para que se vea el toast y luego abrir link
+      setTimeout(() => {
+        window.open(donationLink, '_blank');
+      }, 500);
+    });
+  });
+
+
   // Character counter
   messageInput.addEventListener('input', () => {
     const len = messageInput.value.length;
@@ -251,9 +318,7 @@ function bindEvents() {
   document.getElementById('btn-victim-back')?.addEventListener('click', () => {
     victimReportSection.classList.add('hidden');
     heroSection.classList.remove('hidden');
-    if (howItWorksSection) howItWorksSection.classList.remove('hidden');
-    if (examplesSection) examplesSection.classList.remove('hidden');
-    if (faqSection) faqSection.classList.remove('hidden');
+    if (adContainer1) adContainer1.classList.remove('hidden');
     // Bug fix #2: reset analyze button text when going back
     analyzeBtn.querySelector('.btn-text').textContent = 'Analizar ahora';
     analyzeBtn.querySelector('.btn-icon').textContent = '🔍';
@@ -360,8 +425,10 @@ function renderPreviews() {
     div.className = 'image-preview-item';
     div.innerHTML = `
       <img src="${url}" alt="Preview">
-      <button class="remove-image-btn" onclick="removeImage(${index})">❌</button>
+      <button class="remove-image-btn" data-index="${index}">❌</button>
     `;
+    // Use data-attribute to avoid index drift with inline onclick
+    div.querySelector('.remove-image-btn').addEventListener('click', () => removeImage(index));
     imagePreviewContainer.appendChild(div);
   });
 }
@@ -576,8 +643,6 @@ function compressImage(file, maxWidth = 800, quality = 0.6) {
   });
 }
 
-// Para usar la funcion global de remove
-window.removeImage = removeImage;
 
 /* ═══════════════════════════════════════════════════════════════
    ANALISIS DE IMÁGENES: OCR LOCAL TESSERACT.JS
@@ -716,6 +781,7 @@ async function startAnalysis() {
 
     // Hide loading, show result
     loadingSection.classList.add('hidden');
+    loadingSection.style.display = ''; // clear any inline style residue
 
     if (currentResult.score >= 40) {
       showDangerResult(currentResult);
@@ -933,13 +999,21 @@ function renderExplanation(explanations) {
 }
 
 function renderOriginalText(text, flaggedWords) {
-  let html = escapeHtml(text);
+  // Guard: if text is empty/null show a placeholder
+  const safeText = (text && typeof text === 'string' && text.trim().length > 0)
+    ? text
+    : 'Capturas de pantalla analizadas visualmente (sin texto extraído).';
+  
+  let html = escapeHtml(safeText);
   
   // Highlight flagged words
-  flaggedWords.forEach(word => {
-    const regex = new RegExp(`(${escapeRegex(word)})`, 'gi');
-    html = html.replace(regex, '<span class="highlight-word">$1</span>');
-  });
+  if (Array.isArray(flaggedWords)) {
+    flaggedWords.forEach(word => {
+      if (!word) return;
+      const regex = new RegExp(`(${escapeRegex(word)})`, 'gi');
+      html = html.replace(regex, '<span class="highlight-word">$1</span>');
+    });
+  }
   
   originalTextBox.innerHTML = html;
 }
@@ -1141,4 +1215,30 @@ function animateNumber(element, from, to, duration) {
     if (progress < 1) requestAnimationFrame(update);
   }
   requestAnimationFrame(update);
+}
+
+function showLegalModal(type) {
+  const modal = document.getElementById('legal-modal');
+  const sections = {
+    privacy: document.getElementById('content-privacy'),
+    terms: document.getElementById('content-terms'),
+    cookies: document.getElementById('content-cookies'),
+    how: document.getElementById('content-how'),
+    faq: document.getElementById('content-faq'),
+    about: document.getElementById('content-about')
+  };
+
+  if (!modal) return;
+
+  // Hide all sections first
+  Object.values(sections).forEach(s => s?.classList.add('hidden'));
+
+  // Show requested section
+  if (sections[type]) {
+    sections[type].classList.remove('hidden');
+    modal.classList.remove('hidden');
+    // Scroll modal top if it was scrolled before
+    const body = modal.querySelector('.legal-modal-body');
+    if (body) body.scrollTop = 0;
+  }
 }

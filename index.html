@@ -98,8 +98,11 @@
       <li><a href="/privacy-policy" target="_blank">🔒 Política de Privacidad</a></li>
       <li><a href="/terms" target="_blank">📄 Términos y Condiciones</a></li>
       <li><a href="/cookies" target="_blank">🍪 Política de Cookies</a></li>
+      <li><hr style="border:0; border-top:1px solid var(--border-color); margin:10px 20px;"></li>
+      <li><a href="https://link.mercadopago.com.co/robertai" target="_blank" style="color: var(--red-neon); font-weight: 700;">❤️ Donar</a></li>
     </ul>
   </nav>
+
 
   <!-- ═══════════════════════════════════════════════ -->
   <!-- HERO / INPUT SECTION                            -->
@@ -215,7 +218,7 @@
     <!-- ═══════════════════════════════════════════════ -->
     <!-- LOADING / ANÁLISIS ANIMATION                   -->
     <!-- ═══════════════════════════════════════════════ -->
-    <section id="loading-section" class="section hidden" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding-top:0;margin-top:0;">
+    <section id="loading-section" class="section hidden">
       <div class="container">
         <div class="loading-container">
           <div class="scanner-ring">
@@ -412,6 +415,8 @@
         <!-- BOTÓN NUEVO ANÁLISIS -->
         <button class="btn-new-analysis" id="btn-new-analysis">
           <span>🔄</span> Analizar otro mensaje
+        </button>
+      </div>
     </section>
 
     <!-- ═══════════════════════════════════════════════ -->
@@ -537,36 +542,130 @@
         </p>
       </div>
     </div>
+
   </footer>
 
+  
+  <!-- MODAL: LEGAL (POLÍTICAS) -->
+  <div id="legal-modal" class="modal-overlay hidden">
+    <div class="modal-content legal-modal-content">
+      <button class="modal-close" id="modal-close-legal">&times;</button>
+      <div id="legal-content-area" class="modal-body legal-modal-body">
+        <!-- El contenido se inyecta dinámicamente o se muestra/oculta -->
+        <div id="content-privacy" class="legal-section hidden">
+          <h2>Política de Privacidad</h2>
+          <p class="last-updated">Última actualización: 28 de Abril de 2026</p>
+          <p>Bienvenido a <strong>Robert - Detector de Estafas</strong>. Respetamos tu privacidad y estamos comprometidos a proteger tus datos. Esta política explica cómo recopilamos, usamos y protegemos la información cuando utilizas nuestra herramienta.</p>
+          <h3>1. Datos que recopilamos</h3>
+          <p>Al utilizar Robert para analizar mensajes, enlaces o capturas de pantalla, los datos enviados son procesados estrictamente con el propósito de determinar una posible estafa. Recopilamos información temporal como:</p>
+          <ul>
+            <li>Textos de mensajes introducidos en el buscador.</li>
+            <li>Imágenes (capturas de pantalla) subidas durante la sesión.</li>
+            <li>Direcciones IP y datos básicos de tráfico (Navegador, Sistema Operativo) mediante herramientas estándar de analítica.</li>
+          </ul>
+          <h3>2. ¿Cómo usamos tu información?</h3>
+          <p>La información enviada se utiliza para escaneo e identificación de estafas en tiempo real. Si la IA confirma un caso de estafa, los identificadores maliciosos (números de teléfono, links fraudulentos o alias) se añaden de forma automática a nuestra "Lista Negra" pública.</p>
+          <p><strong>Bajo ningún concepto almacenamos</strong> los textos íntimos, fotografías de conversaciones o información personal sensible enviada para consulta.</p>
+          <h3>3. Publicidad y AdSense</h3>
+          <p>Utilizamos Google AdSense para financiar el servicio de IA. Terceros pueden usar cookies para publicar anuncios basados en tus visitas.</p>
+        </div>
 
+        <div id="content-terms" class="legal-section hidden">
+          <h2>Términos y Condiciones</h2>
+          <p class="last-updated">Última actualización: 28 de Abril de 2026</p>
+          <p>Al acceder y utilizar <strong>Robert - Detector de Estafas</strong>, aceptas estar sujeto por estos Términos y Condiciones. Si no estás de acuerdo con estos términos, no utilices la plataforma.</p>
+          <h3>1. Uso del Servicio</h3>
+          <ul>
+            <li>No usar la plataforma para fines ilegales.</li>
+            <li>No automatizar peticiones a través de bots.</li>
+            <li>Garantizar que las capturas de pantalla no incluyen material de exposición íntima.</li>
+          </ul>
+          <h3>2. Software As-Is</h3>
+          <p>Robert provee predicciones altamente precisas, pero no es un ente legal absoluto. No nos responsabilizamos por decisiones financieras basadas unilateralmente en el reporte de la IA.</p>
+        </div>
 
-</div>
+        <div id="content-cookies" class="legal-section hidden">
+          <h2>Política de Cookies</h2>
+          <p class="last-updated">Última actualización: 28 de Abril de 2026</p>
+          <p>Las cookies son pequeños archivos de texto que los sitios web almacenan para recordar variables de entorno importantes.</p>
+          <h3>1. ¿Para qué usamos cookies?</h3>
+          <ul>
+            <li><strong>Prevención de abuso:</strong> Para contabilizar consultas y evitar ataques de bots.</li>
+            <li><strong>Publicidad:</strong> Para permitir el funcionamiento de Google AdSense y mantener el proyecto gratuito.</li>
+          </ul>
+          <h3>2. Administración</h3>
+          <p>Puedes desactivar las cookies en la configuración de tu navegador, aunque esto podría afectar el funcionamiento de algunas características del sitio.</p>
+        </div>
 
-  <!-- MODAL: DONACIONES -->
-  <div id="donate-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <button class="modal-close" id="modal-close-donate">&times;</button>
-      <div class="modal-header">
-        <h2>❤️ Apoya este proyecto</h2>
-        <p style="color: var(--text-secondary); margin-top: 10px;">
-          Los servidores de Inteligencia Artificial tienen un costo elevado. Si Robert te ayudó a detectar una estafa, tu apoyo voluntario permite que siga siendo gratis para todos.
-        </p>
+        <div id="content-how" class="legal-section hidden">
+          <h2>¿Cómo funciona Robert?</h2>
+          <p>Robert es una red de defensa comunitaria impulsada por Inteligencia Artificial de vanguardia.</p>
+          <h3>1. Recepción de Datos</h3>
+          <p>Procesamos tus capturas de pantalla, textos o enlaces sospechosos de forma simultánea para entender el contexto.</p>
+          <h3>2. Escaneo Multimodal</h3>
+          <p>Leemos las imágenes y analizamos patrones de manipulación psicológica y errores gramaticales comunes en fraudes.</p>
+          <h3>3. Tecnología</h3>
+          <p>Utilizamos modelos Llama 3.3 70B y técnicas de rastreo OSINT para identificar el origen de la amenaza.</p>
+        </div>
+
+        <div id="content-faq" class="legal-section hidden">
+          <h2>Preguntas Frecuentes</h2>
+          <h3>¿Qué es Robert?</h3>
+          <p>Un proyecto social gratuito de ciberseguridad para proteger a las personas de fraudes electrónicos.</p>
+          <h3>¿Guardan mis capturas?</h3>
+          <p>No. Solo extraemos identificadores públicos de estafadores para la base de datos comunitaria. Los datos personales son borrados tras el análisis.</p>
+          <h3>¿Es preciso?</h3>
+          <p>Posee un 95% de precisión en la detección de ingeniería social y extorsiones.</p>
+        </div>
+
+        <div id="content-about" class="legal-section hidden">
+          <h2>Sobre Nosotros</h2>
+          <p>Robert fue creado por <strong>Johan Estiben</strong> tras enfrentar peligros digitales de cerca.</p>
+          <p>Mi misión es que ninguna persona pierda sus ahorros por culpa de un engaño que la tecnología pudo evitar.</p>
+          <p><strong>Contacto:</strong> robertai.soporte@gmail.com</p>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DONAR -->
+  <div id="donate-modal" class="modal-overlay hidden">
+    <div class="modal-content donate-modal-content">
+      <button class="modal-close" id="modal-close-donate">&times;</button>
       <div class="modal-body">
-        <div class="payment-methods" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
-          <a href="https://link.mercadopago.com.co/robertai" target="_blank" class="btn-payment" id="btn-pay-mp" style="text-decoration: none; width: 100%; display: flex; justify-content: center; background: #009ee3; color: white; border: none; font-weight: bold; border-radius: 8px; padding: 15px;">
-            <span class="payment-icon" style="background: white; border-radius: 50%; padding: 2px 4px; color: #009ee3; margin-right: 10px;">🤝</span>
-            Donar de forma segura
-          </a>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; text-align: center;">
-            Acepta Nequi, PSE, Tarjetas de Crédito y Débito a través de Mercado Pago.
-          </p>
+        <div class="donate-header">
+          <span class="donate-icon">❤️</span>
+          <h2>Apoya a Robert AI</h2>
+          <p>Robert es una herramienta gratuita y de código abierto. Tus donaciones ayudan a mantener los servidores de IA y a seguir protegiendo a miles de personas de estafas.</p>
         </div>
         
-        <p style="font-size: 0.8rem; margin-top: 20px; color: var(--text-muted); text-align: center;">
-          Al seleccionar tu método de pago, serás redirigido a una pasarela segura. La donación llegará a nombre de Johan Estiben (Creador de Robert).
-        </p>
+        <div class="payment-options">
+          <button class="btn-payment" data-amount="5">
+            <span class="pay-amount">$5</span>
+            <span class="pay-label">Café de agradecimiento</span>
+          </button>
+          <button class="btn-payment" data-amount="10">
+            <span class="pay-amount">$10</span>
+            <span class="pay-label">Apoyo al Servidor</span>
+          </button>
+          <button class="btn-payment" data-amount="20">
+            <span class="pay-amount">$20</span>
+            <span class="pay-label">Defensor Digital</span>
+          </button>
+          <button class="btn-payment custom-amount">
+            <span class="pay-amount">...</span>
+            <span class="pay-label">Monto personalizado</span>
+          </button>
+        </div>
+        
+        <div class="payment-methods">
+          <p>Pasarela segura procesada por:</p>
+          <div class="method-icons">
+            <span class="method-tag">Mercado Pago</span>
+            <span class="method-tag">PayPal</span>
+            <span class="method-tag">Crypto</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
