@@ -343,8 +343,25 @@ async function startVictimOsint() {
   // Show loading
   heroSection.classList.add('hidden');
   loadingSection.classList.remove('hidden');
+  
+  // Reset progress bar
+  progressBar.style.width = '0%';
+  loadingPercent.textContent = '0%';
+
   const loadingTitle = document.querySelector('.loading-title');
   if (loadingTitle) loadingTitle.textContent = 'Analizando metadatos EXIF y prefijos telefónicos…';
+
+  // Update step texts for OSINT
+  const stepTexts = [
+    'Validando identificadores…',
+    'Escaneando metadatos EXIF…',
+    'Rastreando origen geográfico…',
+    'Generando reporte oficial…'
+  ];
+  const stepElements = document.querySelectorAll('.loading-step .step-text');
+  stepTexts.forEach((txt, idx) => {
+    if (stepElements[idx]) stepElements[idx].textContent = txt;
+  });
 
   // Try EXIF extraction if photo uploaded
   let gpsCoords = null;
@@ -361,87 +378,88 @@ async function startVictimOsint() {
     }
   }
 
-  setTimeout(() => {
-    loadingSection.classList.add('hidden');
+  // Run animation
+  await runLoadingAnimation();
 
-    // ── Phone prefix OSINT ──
-    let osint = null;
-    if (phone) osint = resolvePhoneOsint(phone);
+  loadingSection.classList.add('hidden');
 
-    const locationStr = osint
-      ? `${osint.country} · Operadora de Origen: ${osint.city} (puede variar por portabilidad numérica)`
-      : (phone ? 'Prefijo no registrado / Internacional' : 'No se proporcionó teléfono');
+  // ── Phone prefix OSINT ──
+  let osint = null;
+  if (phone) osint = resolvePhoneOsint(phone);
 
-    const searchQuery   = osint ? `${osint.city}, ${osint.country}` : (phone || handle || 'world');
-    const encodedQuery  = encodeURIComponent(searchQuery);
-    const mapZoom       = osint ? 7 : 2;
+  const locationStr = osint
+    ? `${osint.country} · Operadora de Origen: ${osint.city} (puede variar por portabilidad numérica)`
+    : (phone ? 'Prefijo no registrado / Internacional' : 'No se proporcionó teléfono');
 
-    // ── Fill report ──
-    document.getElementById('report-date').textContent   = new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }) + ' (Hora Colombia)';
-    document.getElementById('report-id').textContent     = 'RBT-' + Date.now().toString(36).toUpperCase();
-    document.getElementById('report-phone').textContent  = phone  || 'No proporcionado';
-    document.getElementById('report-handle').textContent = handle || 'No proporcionado';
-    document.getElementById('report-location').textContent = locationStr;
+  const searchQuery   = osint ? `${osint.city}, ${osint.country}` : (phone || handle || 'world');
+  const encodedQuery  = encodeURIComponent(searchQuery);
+  const mapZoom       = osint ? 7 : 2;
 
-    // ── GPS EXIF block ──
-    const gpsBlock = document.getElementById('report-gps-block');
-    if (gpsCoords) {
-      const latStr  = gpsCoords.lat.toFixed(6);
-      const lngStr  = gpsCoords.lng.toFixed(6);
-      const mapsUrl = `https://www.google.com/maps?q=${latStr},${lngStr}`;
-      const embedUrl = `https://maps.google.com/maps?q=${latStr},${lngStr}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+  // ── Fill report ──
+  document.getElementById('report-date').textContent   = new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }) + ' (Hora Colombia)';
+  document.getElementById('report-id').textContent     = 'RBT-' + Date.now().toString(36).toUpperCase();
+  document.getElementById('report-phone').textContent  = phone  || 'No proporcionado';
+  document.getElementById('report-handle').textContent = handle || 'No proporcionado';
+  document.getElementById('report-location').textContent = locationStr;
 
-      document.getElementById('report-lat').textContent  = latStr;
-      document.getElementById('report-lng').textContent  = lngStr;
-      const gpsLink = document.getElementById('report-gps-link');
-      gpsLink.href        = mapsUrl;
-      gpsLink.textContent = `📍 ${latStr}, ${lngStr}`;
+  // ── GPS EXIF block ──
+  const gpsBlock = document.getElementById('report-gps-block');
+  if (gpsCoords) {
+    const latStr  = gpsCoords.lat.toFixed(6);
+    const lngStr  = gpsCoords.lng.toFixed(6);
+    const mapsUrl = `https://www.google.com/maps?q=${latStr},${lngStr}`;
+    const embedUrl = `https://maps.google.com/maps?q=${latStr},${lngStr}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
-      document.getElementById('report-gps-map').innerHTML =
-        `<iframe src="${embedUrl}" title="GPS exacto del estafador" loading="lazy" style="width:100%;height:100%;border:none;"></iframe>`;
+    document.getElementById('report-lat').textContent  = latStr;
+    document.getElementById('report-lng').textContent  = lngStr;
+    const gpsLink = document.getElementById('report-gps-link');
+    gpsLink.href        = mapsUrl;
+    gpsLink.textContent = `📍 ${latStr}, ${lngStr}`;
 
-      gpsBlock.style.display = 'block';
-      showToast('🎯 ¡Coordenadas GPS reales encontradas en la imagen!');
-    } else {
-      gpsBlock.style.display = 'none';
-      if (photoFile) {
-        showToast('ℹ️ La foto no contiene coordenadas GPS (WhatsApp las elimina automáticamente)');
-      }
+    document.getElementById('report-gps-map').innerHTML =
+      `<iframe src="${embedUrl}" title="GPS exacto del estafador" loading="lazy" style="width:100%;height:100%;border:none;"></iframe>`;
+
+    gpsBlock.style.display = 'block';
+    showToast('🎯 ¡Coordenadas GPS reales encontradas en la imagen!');
+  } else {
+    gpsBlock.style.display = 'none';
+    if (photoFile) {
+      showToast('ℹ️ La foto no contiene coordenadas GPS (WhatsApp las elimina automáticamente)');
     }
+  }
 
-    // ── Prefix map (only show if phone was provided) ──
-    const prefixBlock  = document.getElementById('report-prefix-block');
-    const mapContainer = document.getElementById('report-map-container');
+  // ── Prefix map (only show if phone was provided) ──
+  const prefixBlock  = document.getElementById('report-prefix-block');
+  const mapContainer = document.getElementById('report-map-container');
 
-    if (phone) {
-      prefixBlock.style.display = 'block';
-      mapContainer.innerHTML = `<iframe 
-        src="https://maps.google.com/maps?q=${encodedQuery}&t=&z=${mapZoom}&ie=UTF8&iwloc=&output=embed"
-        title="Rastreo OSINT por prefijo"
-        loading="lazy"
-        style="width:100%;height:100%;border:none;">
-      </iframe>`;
-    } else {
-      // No phone — hide the whole geographic block
-      prefixBlock.style.display = 'none';
-    }
+  if (phone) {
+    prefixBlock.style.display = 'block';
+    mapContainer.innerHTML = `<iframe 
+      src="https://maps.google.com/maps?q=${encodedQuery}&t=&z=${mapZoom}&ie=UTF8&iwloc=&output=embed"
+      title="Rastreo OSINT por prefijo"
+      loading="lazy"
+      style="width:100%;height:100%;border:none;">
+    </iframe>`;
+  } else {
+    // No phone — hide the whole geographic block
+    prefixBlock.style.display = 'none';
+  }
 
-    // Show report
-    victimReportSection.classList.remove('hidden');
+  // Show report
+  victimReportSection.classList.remove('hidden');
 
-    // Silently add to blacklist using dedicated endpoint
-    fetch('/api/report-victim', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        phone: phone, 
-        handle: handle,
-        location: osint ? osint.country : "Desconocido"
-      })
-    }).then(() => {
-      showToast('✅ Reporte enviado a la central de Robert', 'success');
-    }).catch(err => console.warn('Error en reporte silencioso:', err));
-  }, 2500);
+  // Silently add to blacklist using dedicated endpoint
+  fetch('/api/report-victim', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      phone: phone, 
+      handle: handle,
+      location: osint ? osint.country : "Desconocido"
+    })
+  }).then(() => {
+    showToast('✅ Reporte enviado a la central de Robert', 'success');
+  }).catch(err => console.warn('Error en reporte silencioso:', err));
 }
 
 function toBase64(file) {
@@ -567,6 +585,25 @@ async function startAnalysis() {
   resultSection.classList.add('hidden');
   safeSection.classList.add('hidden');
 
+  // Reset progress bar
+  progressBar.style.width = '0%';
+  loadingPercent.textContent = '0%';
+
+  // Reset loading title and steps for standard analysis
+  const loadingTitle = document.querySelector('.loading-title');
+  if (loadingTitle) loadingTitle.textContent = 'Analizando mensaje…';
+  
+  const stepTexts = [
+    'Escaneando patrones de estafa…',
+    'Verificando base de datos de fraudes…',
+    'Analizando manipulación emocional…',
+    'Generando simulación predictiva…'
+  ];
+  const stepElements = document.querySelectorAll('.loading-step .step-text');
+  stepTexts.forEach((txt, idx) => {
+    if (stepElements[idx]) stepElements[idx].textContent = txt;
+  });
+
   try {
     if (activeTab !== 'link') {
       // 1. Convertir y COMPRIMIR imágenes para el análisis visual (Groq limit: 4MB total)
@@ -624,6 +661,9 @@ async function runLoadingAnimation() {
     document.getElementById('step-4')
   ];
   
+  // Ensure steps are clean
+  steps.forEach(s => s.classList.remove('active', 'done'));
+  
   let progress = 0;
   
   for (let i = 0; i < steps.length; i++) {
@@ -640,12 +680,8 @@ async function runLoadingAnimation() {
     await sleep(200);
   }
   
-  // Reset steps for next time
-  steps.forEach(s => {
-    s.classList.remove('active', 'done');
-  });
-  progressBar.style.width = '0%';
-  loadingPercent.textContent = '0%';
+  // No longer resetting progress bar here to avoid the jump back to 0%
+  // It will be reset at the start of the next analysis.
 }
 
 function animateProgress(from, to, duration) {
