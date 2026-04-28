@@ -74,7 +74,27 @@ document.addEventListener('DOMContentLoaded', () => {
   initParticles();
   initRealTimeData();
   bindEvents();
+  initConsentModal();
 });
+
+function initConsentModal() {
+  const consentModal = document.getElementById('consent-modal');
+  const acceptBtn = document.getElementById('btn-accept-consent');
+  
+  // Verificar si ya aceptó anteriormente
+  const hasAccepted = localStorage.getItem('robert_consent_accepted');
+  
+  if (!hasAccepted && consentModal) {
+    consentModal.classList.add('show');
+  }
+  
+  if (acceptBtn) {
+    acceptBtn.addEventListener('click', () => {
+      localStorage.setItem('robert_consent_accepted', 'true');
+      consentModal.classList.remove('show');
+    });
+  }
+}
 
 async function initRealTimeData() {
   // Initial fetch
