@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sobre Nosotros | Robert: Detector de Estafas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-dark: #0a0a0f;
+      --bg-card: rgba(20, 20, 25, 0.7);
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --primary-color: #ff1a1a;
+      --accent-color: #ff4d4d;
+      --border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+    }
+
+    #main-header {
+      background: rgba(10, 10, 15, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      gap: 12px;
+    }
+
+    .logo-image {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(255, 26, 26, 0.4);
+    }
+
+    .logo h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .logo-subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .legal-container {
+      max-width: 800px;
+      margin: 120px auto 60px;
+      padding: 50px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .legal-container {
+        margin: 100px 15px 40px;
+        padding: 30px;
+      }
+    }
+
+    .profile-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin: 0 auto 25px;
+      border: 3px solid var(--primary-color);
+      box-shadow: 0 0 25px rgba(255, 26, 26, 0.4);
+      object-fit: cover;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    
+    .role {
+      color: var(--primary-color);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.85rem;
+      margin-bottom: 30px;
+    }
+
+    .bio {
+      color: var(--text-secondary);
+      line-height: 1.8;
+      font-size: 1.05rem;
+      text-align: left;
+      margin-bottom: 30px;
+    }
+
+    .contact-card {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 25px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      display: inline-block;
+      text-align: left;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+
+    .contact-item:last-child { margin-bottom: 0; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+      color: white !important;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 700;
+      display: inline-block;
+      text-decoration: none !important;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+      cursor: pointer;
+      margin-top: 40px;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 26, 26, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <header id="main-header">
+    <div class="header-content">
+      <a href="/" class="logo">
+        <img src="/logo.png" alt="Robert Logo" class="logo-image">
+        <div class="logo-text">
+          <h1>Robert</h1>
+          <div class="logo-subtitle">Detector de Estafas</div>
+        </div>
+      </a>
+    </div>
+  </header>
+
+  <main class="legal-container">
+    <img src="/logo.png" alt="Johan Estiben" class="profile-img">
+    <h1>Sobre Nosotros</h1>
+    <div class="role">Creado por Johan Estiben</div>
+
+    <div class="bio">
+      <p>Robert nació de una necesidad real. Su creador, <strong>Johan Estiben</strong>, tras enfrentar de cerca el peligro de las estafas digitales, decidió utilizar su conocimiento técnico para construir una herramienta capaz de proteger a los demás.</p>
+      <p>Robert AI no es solo código; es un compromiso con la ciberseguridad comunitaria. Mi misión es que ninguna persona pierda sus ahorros por culpa de un engaño que la tecnología pudo haber evitado.</p>
+    </div>
+
+    <div class="contact-card">
+      <div class="contact-item"><span>📧</span> <strong>Correo:</strong> robertai.soporte@gmail.com</div>
+      <div class="contact-item"><span>🌍</span> <strong>Ubicación:</strong> Global — Latinoamérica y España</div>
+      <div class="contact-item"><span>👥</span> <strong>Comunidad:</strong> Buscamos proteger a miles de usuarios cada día</div>
+    </div>
+
+    <a href="/" class="btn-primary">Volver al Inicio</a>
+  </main>
+</body>
+</html>

@@ -383,6 +383,17 @@ app.get('/sitemap.xml', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/sitemap.xml'));
 });
 
+// Rutas explícitas para las páginas de información
+app.get('/how-it-works', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/how-it-works.html'));
+});
+app.get('/faq', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/faq.html'));
+});
+app.get('/about', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/about.html'));
+});
+
 // Rutas explícitas para las páginas legales requeridas por Google AdSense
 app.get('/privacy-policy', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/privacy.html'));

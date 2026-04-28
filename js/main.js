@@ -14,10 +14,6 @@ const resultSection     = document.getElementById('result-section');
 const safeSection       = document.getElementById('safe-section');
 
 // Secciones de contenido estático (se ocultan durante análisis)
-const howItWorksSection = document.getElementById('how-it-works-section');
-const examplesSection   = document.getElementById('examples-section');
-const faqSection        = document.getElementById('faq-section');
-const aboutSection      = document.getElementById('about-section');
 const adContainer1      = document.getElementById('ad-container-1');
 
 // Side Menu
@@ -169,16 +165,10 @@ function bindEvents() {
 
   sideMenuLinks.forEach(link => {
     link.addEventListener('click', (e) => {
-      const isInternal = link.hasAttribute('data-nav');
-      if (isInternal) {
-        e.preventDefault();
-        const targetId = link.getAttribute('href').substring(1);
-        const targetElement = document.getElementById(targetId);
-        toggleMenu(false);
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
+      // Si el link tiene target="_blank" o href empieza por /, dejamos que navegue normalmente
+      // Solo manejamos el cierre del menú si es navegación interna (en este caso no hay)
+      // Pero por si acaso el usuario navega a / o similar, cerramos.
+      toggleMenu(false);
     });
   });
   
@@ -388,10 +378,6 @@ async function startVictimOsint() {
 
   // Show loading — hide content sections and scroll to top
   heroSection.classList.add('hidden');
-  if (howItWorksSection) howItWorksSection.classList.add('hidden');
-  if (examplesSection) examplesSection.classList.add('hidden');
-  if (faqSection) faqSection.classList.add('hidden');
-  if (aboutSection) aboutSection.classList.add('hidden');
   if (adContainer1) adContainer1.classList.add('hidden');
   loadingSection.classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1035,10 +1021,6 @@ function resetToHome() {
   loadingSection.classList.add('hidden');
   victimReportSection.classList.add('hidden');
   heroSection.classList.remove('hidden');
-  if (howItWorksSection) howItWorksSection.classList.remove('hidden');
-  if (examplesSection) examplesSection.classList.remove('hidden');
-  if (faqSection) faqSection.classList.remove('hidden');
-  if (aboutSection) aboutSection.classList.remove('hidden');
   if (adContainer1) adContainer1.classList.remove('hidden');
   
   // Limpiar inputs de texto
