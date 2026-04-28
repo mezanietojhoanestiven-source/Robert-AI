@@ -372,7 +372,11 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'ok', message: 'Robert AI Vision & Memory Backend funcionando' });
 });
 
-// ─── SERVIR FRONTEND EN PRODUCCIÓN ───
+// Sirve el archivo ads.txt explícitamente para Google AdSense
+app.get('/ads.txt', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/ads.txt'));
+});
+
 // Sirve los archivos estáticos construidos por Vite
 app.use(express.static(path.join(__dirname, '../dist')));
 

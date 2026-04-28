@@ -67,10 +67,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initRealTimeData() {
+  // Initial fetch
   fetchStats();
   fetchRecentScams();
+  
   // Pre-load Tesseract worker in background
   initTesseract();
+
+  // Set up polling (every 30 seconds for stats/feed)
+  setInterval(() => {
+    fetchStats();
+    fetchRecentScams();
+  }, 30000); 
 }
 
 async function fetchStats() {
@@ -460,6 +468,8 @@ async function startVictimOsint() {
     })
   }).then(() => {
     showToast('✅ Reporte enviado a la central de Robert', 'success');
+    fetchStats();
+    fetchRecentScams();
   }).catch(err => console.warn('Error en reporte silencioso:', err));
 }
 
