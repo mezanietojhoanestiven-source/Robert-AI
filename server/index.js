@@ -275,18 +275,8 @@ function sanitizeInput(input) {
   return input.trim().replace(/[\x00-\x1F\x7F]/g, '').substring(0, 3000);
 }
 
-function validateImageBase64(imgBase64) {
-  if (!imgBase64 || typeof imgBase64 !== 'string') return false;
-  
-  try {
-    const base64Data = imgBase64.replace(/^data:image\/\w+;base64,/, '');
-    const sizeInBytes = (base64Data.length * 3) / 4;
-    const sizeInMB = sizeInBytes / (1024 * 1024);
-    return sizeInMB <= 4;
-  } catch {
-    return false;
-  }
-}
+// Esta función ya no se usa - el OCR se hace en el frontend
+// function validateImageBase64(imgBase64) {
 
 // ============================================
 // PROMPT: Sistema de análisis Robert
@@ -330,50 +320,6 @@ Nota: Los campos "icon" DEBEN ser un EMOJI. "level" solo puede ser "ALTO", "MEDI
 // API: Endpoint de análisis principal
 // ============================================
 app.post('/api/analyze', async (req, res) => {
-  const startTime = Date.now();
-  const requestId = crypto.randomUUID().substring(0, 8);
-  
-  log('INFO', 'Análisis iniciado', { requestId });
-  
-  const { message, images } = req.body;
-
-  if ((!message || typeof message !== 'string') && (!images || images.length === 0)) {
-    return res.status(400).json({ error: 'Debes enviar texto o capturas de pantalla' });
-  }
-
-  const safeMessage = sanitizeInput(message);
-
-  // Validar imágenes si se proporcionan
-  let validatedImages = [];
-  if (images && images.length > 0) {
-    if (images.length > 5) {
-      return res.status(400).json({ error: 'Máximo 5 imágenes permitidas' });
-    }
-    
-    validatedImages = images.filter(validateImageBase64);
-    if (validatedImages.length === 0) {
-      return res.status(400).json({ error: 'Imágenes inválidas o demasiado grandes' });
-    }
-  }
-
-  // Verificar blacklist local
-  const blacklist = getBlacklist();
-  let matchFound = false;
-  let matchingIdentifier = '';
-  
-  if (safeMessage) {
-    const identifiersInText = safeMessage.match(/[+\d\s-]{7,20}|@[a-zA-Z0-9._]+|https?:\/\/[^\s]+/g) || [];
-    for (const id of identifiersInText) {
-      const normalized = id.includes('@') || id.includes('http') ? id.trim() : id.replace(/[\s\-()]/g, '');
-      if (blacklist.includes(normalized)) {
-        matchFound = true;
-        matchingIdentifier = normalized;
-        break;
-      }
-    }
-  }
-
-  const hasImages = validatedImages.length > 0;
   
   // Para imágenes, usamos texto extraído por OCR + análisis de texto
   // Esto es más confiable que modelos de visión API
@@ -826,26 +772,14 @@ app.post('/api/analyze', async (req, res) => {
   
   log('INFO', `Análisis iniciado`, { requestId });
   
-  const { message, images } = req.body;
+  const { message } = req.body;
 
-  if ((!message || typeof message !== 'string') && (!images || images.length === 0)) {
-    return res.status(400).json({ error: 'Debes enviar texto o capturas de pantalla' });
+  // Solo accept texto - OCR se hace en el frontend
+  if (!message || typeof message !== 'string') {
+    return res.status(400).json({ error: 'Debes enviar texto para analizar' });
   }
 
   const safeMessage = sanitizeInput(message);
-
-  // Validar imágenes si se proporcionan
-  let validatedImages = [];
-  if (images && images.length > 0) {
-    if (images.length > 5) {
-      return res.status(400).json({ error: 'Máximo 5 imágenes permitidas' });
-    }
-    
-    validatedImages = images.filter(validateImageBase64);
-    if (validatedImages.length === 0) {
-      return res.status(400).json({ error: 'Imágenes inválidas o demasiado grandes' });
-    }
-  }
 
   // Verificar blacklist local
   const blacklist = getBlacklist();
@@ -863,11 +797,8 @@ app.post('/api/analyze', async (req, res) => {
       }
     }
   }
-
-  const hasImages = validatedImages.length > 0;
   
-  // Para imágenes, usamos texto extraído por OCR + análisis de texto
-  // Esto es más confiable que modelos de visión API
+  // Siempre usamos texto - no imágenes
   const modelToUse = 'llama-3.3-70b-versatile';
   
   const systemPrompt = getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : '');
@@ -887,22 +818,14 @@ app.post('/api/analyze', async (req, res) => {
     });
   }
 
-  let textPrompt = "Analiza el siguiente contenido ";
-  textPrompt += hasImages ? "junto con las imágenes adjuntas. " : "proporcionado. ";
+  let textPrompt = "Analiza el siguiente contenido proporcionado. ";
   textPrompt += "Busca patrones de fraude, manipulación o estafa. DEBES RESPONDER SOLO EN FORMATO JSON.\n\nContenido: ";
-  textPrompt += safeMessage || "[Sin texto, analizar solo imágenes]";
+  textPrompt += safeMessage || "[Sin texto para analizar]";
   
   userContent.push({ type: 'text', text: textPrompt });
 
-  if (hasImages) {
-    validatedImages.forEach((imgBase64) => {
-      const url = imgBase64.startsWith('data:') ? imgBase64 : `data:image/png;base64,${imgBase64}`;
-      userContent.push({
-        type: 'image_url',
-        image_url: { url: url }
-      });
-    });
-  }
+  // IMÁGENES: Ya no se envían - OCR local extrae el texto antes
+  // El backend solo recibe el texto extraído por OCR
 
   const jsonHint = `\n\nResponde EXCLUSIVAMENTE con el objeto JSON siguiendo esta estructura:
   {
