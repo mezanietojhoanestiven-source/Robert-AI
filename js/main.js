@@ -13,6 +13,11 @@ const loadingSection    = document.getElementById('loading-section');
 const resultSection     = document.getElementById('result-section');
 const safeSection       = document.getElementById('safe-section');
 
+// Secciones de contenido estático (se ocultan durante análisis)
+const howItWorksSection = document.getElementById('how-it-works-section');
+const examplesSection   = document.getElementById('examples-section');
+const faqSection        = document.getElementById('faq-section');
+
 const messageInput      = document.getElementById('message-input');
 const charCount         = document.getElementById('char-count');
 const analyzeBtn        = document.getElementById('analyze-btn');
@@ -205,6 +210,9 @@ function bindEvents() {
   document.getElementById('btn-victim-back')?.addEventListener('click', () => {
     victimReportSection.classList.add('hidden');
     heroSection.classList.remove('hidden');
+    if (howItWorksSection) howItWorksSection.classList.remove('hidden');
+    if (examplesSection) examplesSection.classList.remove('hidden');
+    if (faqSection) faqSection.classList.remove('hidden');
     // Bug fix #2: reset analyze button text when going back
     analyzeBtn.querySelector('.btn-text').textContent = 'Analizar ahora';
     analyzeBtn.querySelector('.btn-icon').textContent = '🔍';
@@ -349,9 +357,13 @@ async function startVictimOsint() {
     return;
   }
 
-  // Show loading
+  // Show loading — hide content sections and scroll to top
   heroSection.classList.add('hidden');
+  if (howItWorksSection) howItWorksSection.classList.add('hidden');
+  if (examplesSection) examplesSection.classList.add('hidden');
+  if (faqSection) faqSection.classList.add('hidden');
   loadingSection.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   
   // Reset progress bar and loading steps
   progressBar.style.width = '0%';
@@ -593,9 +605,13 @@ async function startAnalysis() {
 
   // Show loading IMMEDIATELY, before OCR handles heavy processing
   heroSection.classList.add('hidden');
+  if (howItWorksSection) howItWorksSection.classList.add('hidden');
+  if (examplesSection) examplesSection.classList.add('hidden');
+  if (faqSection) faqSection.classList.add('hidden');
   loadingSection.classList.remove('hidden');
   resultSection.classList.add('hidden');
   safeSection.classList.add('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
   // Reset progress bar and loading steps
   progressBar.style.width = '0%';
@@ -604,13 +620,20 @@ async function startAnalysis() {
 
   // Reset loading title and steps for standard analysis
   const loadingTitle = document.querySelector('.loading-title');
-  if (loadingTitle) loadingTitle.textContent = 'Analizando mensaje…';
+  if (loadingTitle) {
+    loadingTitle.textContent = activeTab === 'link' ? 'Analizando texto o enlace…' : 'Analizando capturas de pantalla…';
+  }
   
-  const stepTexts = [
+  const stepTexts = activeTab === 'link' ? [
     'Escaneando patrones de estafa…',
     'Verificando base de datos de fraudes…',
     'Analizando manipulación emocional…',
     'Generando simulación predictiva…'
+  ] : [
+    'Procesando capturas con Visión Artificial…',
+    'Comparando con la base de datos global…',
+    'Analizando manipulación visual…',
+    'Generando dictamen predictivo…'
   ];
   const stepElements = document.querySelectorAll('.loading-step .step-text');
   stepTexts.forEach((txt, idx) => {
@@ -979,7 +1002,11 @@ function resetToHome() {
   resultSection.classList.add('hidden');
   safeSection.classList.add('hidden');
   loadingSection.classList.add('hidden');
+  victimReportSection.classList.add('hidden');
   heroSection.classList.remove('hidden');
+  if (howItWorksSection) howItWorksSection.classList.remove('hidden');
+  if (examplesSection) examplesSection.classList.remove('hidden');
+  if (faqSection) faqSection.classList.remove('hidden');
   
   // Limpiar inputs de texto
   messageInput.value = '';
