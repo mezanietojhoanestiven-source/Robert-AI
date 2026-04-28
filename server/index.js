@@ -342,19 +342,13 @@ app.post('/api/analyze', async (req, res) => {
     });
   }
 
-  let textPrompt = "Analiza el siguiente contenido ";
-  textPrompt += hasImages ? "junto con las imágenes adjuntas. " : "proporcionado. ";
+  let textPrompt = "Analiza el siguiente contenido proporcionado. ";
   textPrompt += "Busca patrones de fraude, manipulación o estafa. DEBES RESPONDER SOLO EN FORMATO JSON.\n\nContenido: ";
-  textPrompt += safeMessage || "[Sin texto, analizar solo imágenes]";
+  textPrompt += safeMessage || "[Sin texto para analizar]";
   
   userContent.push({ type: 'text', text: textPrompt });
 
-  if (hasImages) {
-    validatedImages.forEach((imgBase64) => {
-      const url = imgBase64.startsWith('data:') ? imgBase64 : `data:image/png;base64,${imgBase64}`;
-      userContent.push({ type: 'image_url', image_url: { url } });
-    });
-  }
+  // NO se envían imágenes - el OCR se hace en el frontend
 
   const jsonHint = `\n\nResponde EXCLUSIVAMENTE con el objeto JSON siguiendo esta estructura:
   {
@@ -708,21 +702,6 @@ function sanitizeInput(input) {
     .trim()
     .replace(/[\x00-\x1F\x7F]/g, '')
     .substring(0, 3000);
-}
-
-function validateImageBase64(imgBase64) {
-  if (!imgBase64 || typeof imgBase64 !== 'string') return false;
-  
-  const base64Data = imgBase64.replace(/^data:image\/\w+;base64,/, '');
-  
-  try {
-    const sizeInBytes = (base64Data.length * 3) / 4;
-    const sizeInMB = sizeInBytes / (1024 * 1024);
-    
-    return sizeInMB <= 4;
-  } catch {
-    return false;
-  }
 }
 
 // ============================================
