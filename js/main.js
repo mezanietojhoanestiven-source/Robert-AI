@@ -165,9 +165,11 @@ function bindEvents() {
 
   sideMenuLinks.forEach(link => {
     link.addEventListener('click', (e) => {
-      // Si el link tiene target="_blank" o href empieza por /, dejamos que navegue normalmente
-      // Solo manejamos el cierre del menú si es navegación interna (en este caso no hay)
-      // Pero por si acaso el usuario navega a / o similar, cerramos.
+      e.preventDefault();
+      const href = link.getAttribute('href');
+      if (href && href !== '/' && href !== '#') {
+        window.location.href = href;
+      }
       toggleMenu(false);
     });
   });
@@ -514,8 +516,9 @@ function toBase64(file) {
 
 /**
  * Comprime una imagen usando canvas para mantenerse bajo el límite de 4MB de Groq.
+ * Reducimos el tamaño para evitar errores con modelos de visión.
  */
-function compressImage(file, maxWidth = 1200, quality = 0.7) {
+function compressImage(file, maxWidth = 800, quality = 0.6) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -622,13 +625,11 @@ async function startAnalysis() {
 
   // Show loading IMMEDIATELY, before OCR handles heavy processing
   heroSection.classList.add('hidden');
-  if (howItWorksSection) howItWorksSection.classList.add('hidden');
-  if (examplesSection) examplesSection.classList.add('hidden');
-  if (faqSection) faqSection.classList.add('hidden');
+  if (adContainer1) adContainer1.classList.add('hidden');
   loadingSection.classList.remove('hidden');
   resultSection.classList.add('hidden');
   safeSection.classList.add('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'instant' });
 
   // Reset progress bar and loading steps
   progressBar.style.width = '0%';
@@ -659,28 +660,39 @@ async function startAnalysis() {
 
   try {
     if (activeTab !== 'link') {
-      // 1. Convertir y COMPRIMIR imágenes para el análisis visual (Groq limit: 4MB total)
-      showToast('📸 Procesando y comprimiendo capturas...', 'info');
-      const compressedImages = await Promise.all(selectedImages.map(file => compressImage(file)));
-      payload.images = compressedImages;
+      // FIX: Run image processing AND loading animation concurrently so user sees progress
+      const [_, analysisResult] = await Promise.all([
+        runLoadingAnimation(),
+        (async () => {
+          // 1. Convertir y COMPRIMIR imágenes para el análisis visual (Groq limit: 4MB total)
+          showToast('📸 Procesando y comprimiendo capturas...', 'info');
+          const compressedImages = await Promise.all(selectedImages.map(file => compressImage(file)));
+          payload.images = compressedImages;
 
-      // 2. Extraer texto con OCR local como apoyo (opcional, pero útil para highlights)
-      try {
-        const extractedText = await extractTextFromImages(selectedImages);
-        payload.message = extractedText;
-      } catch (ocrErr) {
-        console.warn('OCR local falló, continuando solo con visión:', ocrErr);
-        payload.message = ""; // El backend usará solo las imágenes
-      }
+          // 2. Extraer texto con OCR local como apoyo
+          try {
+            const extractedText = await extractTextFromImages(selectedImages);
+            payload.message = extractedText;
+          } catch (ocrErr) {
+            console.warn('OCR local falló, continuando solo con visión:', ocrErr);
+            payload.message = "";
+          }
+
+          // 3. Send to backend for analysis
+          return await analyzeData(payload);
+        })()
+      ]);
+      
+      currentResult = analysisResult;
+    } else {
+      // For text-only analysis, run animation and analysis in parallel
+      const [_, analysisResult] = await Promise.all([
+        runLoadingAnimation(),
+        analyzeData(payload)
+      ]);
+      
+      currentResult = analysisResult;
     }
-
-    // Run analysis and animation concurrently
-    const [_, analysisResult] = await Promise.all([
-      runLoadingAnimation(),
-      analyzeData(payload)
-    ]);
-
-    currentResult = analysisResult;
 
     // Hide loading, show result
     loadingSection.classList.add('hidden');
@@ -763,6 +775,7 @@ function animateProgress(from, to, duration) {
    RENDER DANGER RESULT
    ═══════════════════════════════════════════════════════════════ */
 function showDangerResult(result) {
+  window.scrollTo({ top: 0, behavior: 'instant' });
   resultSection.classList.remove('hidden');
 
   // Alert styling based on level
@@ -832,6 +845,7 @@ function showDangerResult(result) {
 
 /* ─── RENDER SAFE RESULT ─── */
 function showSafeResult(result) {
+  window.scrollTo({ top: 0, behavior: 'instant' });
   safeSection.classList.remove('hidden');
   
   const safeScoreNum = document.getElementById('safe-score-number');
