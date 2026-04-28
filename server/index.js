@@ -6,7 +6,6 @@ import rateLimit from 'express-rate-limit';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,64 +17,29 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ============================================
-// SECURITY: Headers
-// ============================================
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  next();
-});
-
-// ============================================
-// CORS
-// ============================================
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  process.env.ALLOWED_ORIGIN
-].filter(Boolean);
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Origen no permitido'));
-    }
-  },
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
   credentials: true
 }));
 
+// Aumentamos a 50mb para soportar arrays de imágenes en base64
 app.use(express.json({ limit: '50mb' }));
 
-// ============================================
-// API Key
-// ============================================
 if (!process.env.GROQ_API_KEY) {
-  console.error('🔴 CRÍTICO: GROQ_API_KEY no está definida');
-  process.exit(1);
+  console.warn('⚠️ ADVERTENCIA: GROQ_API_KEY no está definida en .env');
 }
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// ============================================
-// Rate Limiting
-// ============================================
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  message: { error: 'Has superado el límite de peticiones.' },
+  message: { error: 'Has superado el límite de peticiones. Por favor, inténtalo de nuevo en 15 minutos.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api/analyze', apiLimiter);
 
-// ============================================
-// DATABASE: JSON simple
-// ============================================
 const DEFAULT_DB = {
   extractedIdentifiers: [],
   totalAnalyses: 0,
@@ -117,15 +81,18 @@ async function updateOnAnalysis(result) {
   if (result.level === 'ALTO') {
     db.scamsDetected = (db.scamsDetected || 0) + 1;
     
+    // Add to extracted identifiers (blacklist)
     if (result.extractedIdentifiers && result.extractedIdentifiers.length > 0) {
       const added = new Set(db.extractedIdentifiers);
       result.extractedIdentifiers.forEach(id => {
+        // Normalize: if it looks like a phone number, remove non-digits (except +)
         const normalized = id.includes('@') || id.includes('http') ? id.trim() : id.replace(/[\s\-()]/g, '');
         added.add(normalized);
       });
       db.extractedIdentifiers = Array.from(added);
     }
 
+    // Add to recent feed (anonymized)
     const newEntry = {
       id: Date.now().toString(36),
       type: result.scamType,
@@ -138,65 +105,62 @@ async function updateOnAnalysis(result) {
   await saveDB(db);
 }
 
-// ============================================
-// SANITIZACIÓN
-// ============================================
-function sanitizeInput(input) {
-  if (!input || typeof input !== 'string') return '';
-  return input.trim().replace(/[\x00-\x1F\x7F]/g, '').substring(0, 3000);
-}
-
-// ============================================
-// PROMPT
-// ============================================
 const getSystemPrompt = (blacklistAlert) => `
-Eres "Robert", el agente de inteligencia artificial contra estafas y fraudes cibernéticos. 
-Tu misión es analizar mensajes para detectar estafas.
+Eres "Robert", el agente de inteligencia artificial visual definitivo contra estafas y fraudes cibernéticos. 
+Tu misión es cazar estafadores analizando capturas de pantalla o textos. Posees un conocimiento profundo de psicología humana, manipulación emocional, y todas las técnicas de fraude.
 
 ${blacklistAlert}
+Si hay una alerta de lista negra arriba, levanta ALERTA MÁXIMA ROJA inmediatamente.
 
-Reglas:
-1. Analiza el mensaje buscando tácticas de urgencia, manipulación, ofertas irreales.
-2. Evalúa el riesgo del 0 al 100. (70-100 ALTO, 40-69 MEDIO, 0-39 BAJO)
-3. Genera timeline qué pasaría si la víctima cae.
-4. Extrae identificadores maliciosos (teléfonos, cuentas, links).
-5. Extrae "red flags" (banderas rojas).
+Reglas de Análisis:
+1. Cadena de Pensamiento Obligatoria: Antes de dar un puntaje, DEBES generar tu análisis paso a paso en el campo oculto "reasoning". Busca tácticas de urgencia, manipulación, ofertas irreales, cuentas extrañas o enlaces sospechosos.
+2. Basado en tu análisis previo (reasoning), evalúa el riesgo real del 0 al 100. Sé estricto. (70-100 es ALTO, 40-69 es MEDIO, 0-39 es BAJO/Seguro).
+3. Genera una línea de tiempo (timeline) proyectando QUÉ PASARÍA SI LA VÍCTIMA CAE. Debe ser cruda y realista.
+4. Identifica de 1 a 3 indicadores clave de por qué es una estafa.
+5. Extrae identificadores maliciosos (teléfonos, cuentas, correos, links, @alias) CLARAMENTE VISIBLES y ponlos en "extractedIdentifiers".
+6. Extrae "red flags" (banderas rojas) textuales detectadas a "flaggedWords".
 
-IMPORTANTE: DEBES DEVOLVER EXCLUSIVAMENTE JSON.
+7. Rastreo OSINT: Analiza los números de teléfono extraídos. Determina el país y, si es posible, la ciudad o región de origen usando el código indicativo internacional (ej. +57 = Colombia, +234 = Nigeria, +52 = México). Retorna estos datos en "osint_location" (string vacío si no hay número).
+
+IMPORTANTE: DEBES DEVOLVER EXCLUSIVAMENTE UN OBJETO JSON VÁLIDO. NINGÚN TEXTO ADICIONAL.
+Estructura EXCLUSIVA del JSON:
 {
-  "reasoning": "...",
-  "score": 0-100,
-  "level": "ALTO/MEDIO/BAJO",
-  "scamType": "...",
-  "indicators": [{ "icon": "❌", "title": "...", "description": "..." }],
-  "timeline": [{ "day": "...", "title": "...", "description": "...", "color": "red" }],
-  "explanations": [{ "icon": "🔍", "title": "...", "description": "..." }],
-  "flaggedWords": [],
-  "extractedIdentifiers": [],
-  "osint_location": "..."
+  "reasoning": "El mensaje exige dinero urgente usando un sentido de urgencia falso...",
+  "score": 95,
+  "level": "ALTO", 
+  "scamType": "💰 Fraude de Inversión",
+  "indicators": [ { "icon": "❌", "title": "Urgencia Artificial", "description": "Buscan presionarte..." } ],
+  "timeline": [ { "day": "Día 1", "title": "Robo Inicial", "description": "Traspasas el dinero...", "color": "dark-red" } ],
+  "explanations": [ { "icon": "🧠", "title": "Manipulación del miedo", "description": "Juegan con tu temor..." } ],
+  "flaggedWords": ["transferencia", "urgente"],
+  "extractedIdentifiers": ["+1234567890", "link-falso.com"],
+  "osint_location": "Nigeria"
 }
+
+Nota: Los campos "icon" DEBEN ser un EMOJI. "level" solo puede ser "ALTO", "MEDIO" o "BAJO". "color" de timeline: "green", "yellow", "red", "dark-red". Solo devuelve el JSON, NUNCA text markdown. Si es seguro, nivel BAJO, score bajo, y extractedIdentifiers vacío.
 `;
 
-// ============================================
-// API: /api/analyze
-// ============================================
 app.post('/api/analyze', async (req, res) => {
-  const requestId = crypto.randomUUID().substring(0, 8);
-  console.log(`[${requestId}] Análisis iniciado`);
-  
-  const { message } = req.body;
+  const { message, images } = req.body; // images array of base64 strings
 
-  if (!message || typeof message !== 'string' || message.trim() === '') {
-    return res.status(400).json({ error: 'Debes proporcionar texto para analizar' });
+  if ((!message || typeof message !== 'string') && (!images || images.length === 0)) {
+    return res.status(400).json({ error: 'Debes enviar texto o capturas de pantalla' });
   }
 
-  const safeMessage = sanitizeInput(message);
+  // Sanitización de texto
+  let safeMessage = message ? message.trim() : "";
+  if (safeMessage.length > 3000) safeMessage = safeMessage.substring(0, 3000) + '... [TEXTO TRUNCADO]';
 
-  // Verificar blacklist
+  if (!process.env.GROQ_API_KEY) {
+    return res.status(500).json({ error: 'La API Key de Groq no está configurada.' });
+  }
+
+  // Leer memoria colectiva (blacklist)
   const blacklist = await getBlacklist();
-  let matchFound = false;
-  let matchingIdentifier = '';
   
+  // Verificación local previa
+  let matchFound = false;
+  let matchingIdentifier = "";
   if (safeMessage) {
     const identifiersInText = safeMessage.match(/[+\d\s-]{7,20}|@[a-zA-Z0-9._]+|https?:\/\/[^\s]+/g) || [];
     for (const id of identifiersInText) {
@@ -208,15 +172,70 @@ app.post('/api/analyze', async (req, res) => {
       }
     }
   }
+
+  // ─── CONSTRUCCIÓN DEL PROMPT MULTIMODAL ───
+  const hasImages = images && images.length > 0;
+  // Llama 4 Scout es el único modelo con soporte multimodal en Groq
+  const modelToUse = hasImages ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
   
-  const modelToUse = 'llama-3.3-70b-versatile';
+  const systemPrompt = getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : "");
   
-  const systemPrompt = getSystemPrompt(matchFound ? `OJO: "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA.` : '');
+  const messagesPayload = [];
+
+  // IMPORTANTE: Algunos modelos Vision en Groq fallan si se usa el rol 'system' junto con imágenes. 
+  // Para máxima compatibilidad, incluimos las instrucciones en el primer mensaje de 'user'.
+  if (!hasImages) {
+    messagesPayload.push({ role: 'system', content: systemPrompt });
+  }
+
+  // Construir contenido del usuario
+  const userContent = [];
   
-  const messagesPayload = [
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: `Analiza: ${safeMessage}` }
-  ];
+  // Si hay imágenes, el prompt de sistema va aquí dentro
+  if (hasImages) {
+    userContent.push({ 
+      type: 'text', 
+      text: "INSTRUCCIONES DE SISTEMA:\n" + systemPrompt + "\n\nMENSAJE DEL USUARIO A ANALIZAR:\n" 
+    });
+  }
+
+  // Agregar texto si existe
+  let textPrompt = "Analiza el siguiente contenido ";
+  textPrompt += hasImages ? "junto con las imágenes adjuntas. " : "proporcionado. ";
+  textPrompt += "Busca patrones de fraude, manipulación o estafa. DEBES RESPONDER SOLO EN FORMATO JSON.\n\nContenido: ";
+  textPrompt += safeMessage || "[Sin texto, analizar solo imágenes]";
+  
+  userContent.push({ type: 'text', text: textPrompt });
+
+  // Agregar imágenes si existen
+  if (hasImages) {
+    images.forEach((imgBase64) => {
+      const url = imgBase64.startsWith('data:') ? imgBase64 : `data:image/png;base64,${imgBase64}`;
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: url }
+      });
+    });
+  }
+
+  // Recordatorio final para forzar el formato
+  const jsonHint = `\n\nResponde EXCLUSIVAMENTE con el objeto JSON siguiendo esta estructura:
+  {
+    "reasoning": "...",
+    "score": 0-100,
+    "level": "ALTO/MEDIO/BAJO",
+    "scamType": "...",
+    "indicators": [],
+    "timeline": [],
+    "explanations": [],
+    "flaggedWords": [],
+    "extractedIdentifiers": [],
+    "osint_location": "..."
+  }`;
+  
+  userContent.push({ type: 'text', text: jsonHint });
+
+  messagesPayload.push({ role: 'user', content: userContent });
 
   try {
     const chatCompletion = await groq.chat.completions.create({
@@ -229,60 +248,90 @@ app.post('/api/analyze', async (req, res) => {
 
     const aiResponseContent = chatCompletion.choices[0]?.message?.content || "{}";
 
+    // Log de la respuesta cruda para depuración (visible en la consola del servidor)
+    console.log('--- RESPUESTA IA (RAW) ---');
+    console.log(aiResponseContent);
+    console.log('--------------------------');
+
     let jsonResult;
     try {
       jsonResult = JSON.parse(aiResponseContent);
-    } catch (e) {
-      console.error(`[${requestId}] Error parseando:`, e.message);
-      throw new Error('La IA devolvió formato inválido.');
+    } catch (parseError) {
+      console.error('Error al parsear JSON de la IA:', parseError);
+      throw new Error('La IA devolvió un formato de texto no válido. Por favor, intenta de nuevo.');
     }
 
-    jsonResult.score = parseInt(jsonResult.score ?? 0) || 0;
-    jsonResult.scamType = jsonResult.scamType || "Análisis General";
-    jsonResult.indicators = (jsonResult.indicators || []).map(ind => ({
-      icon: ind.icon || "���️",
-      title: ind.title || "Alerta",
-      description: ind.description || ""
+    // Validación y Normalización robusta
+    // Llama 3.2 Vision puede variar los nombres de los campos, intentamos recuperarlos todos
+    const score = jsonResult.score ?? jsonResult.puntaje ?? jsonResult.risk_score ?? jsonResult.risk ?? 0;
+    const scamType = jsonResult.scamType || jsonResult.tipo_estafa || jsonResult.type || jsonResult.category || "Análisis General";
+    
+    // Normalizar score a número
+    jsonResult.score = parseInt(score) || 0;
+    jsonResult.scamType = scamType;
+
+    // Asegurar que las listas existan para evitar errores en el frontend
+    jsonResult.indicators = (jsonResult.indicators || jsonResult.indicadores || []).map(ind => ({
+      icon: ind.icon || ind.icono || "⚠️",
+      title: ind.title || ind.titulo || "Alerta",
+      description: ind.description || ind.descripcion || ""
     }));
-    jsonResult.timeline = (jsonResult.timeline || []).map(item => ({
-      day: item.day || "Evento",
-      title: item.title || "Suceso",
-      description: item.description || "",
+
+    jsonResult.timeline = (jsonResult.timeline || jsonResult.linea_tiempo || []).map(item => ({
+      day: item.day || item.dia || "Evento",
+      title: item.title || item.titulo || "Suceso",
+      description: item.description || item.descripcion || "",
       color: item.color || "red"
     }));
-    jsonResult.explanations = (jsonResult.explanations || []).map(exp => ({
-      icon: exp.icon || "🔍",
-      title: exp.title || "Detalle",
-      description: exp.description || ""
-    }));
-    jsonResult.flaggedWords = jsonResult.flaggedWords || [];
-    jsonResult.extractedIdentifiers = jsonResult.extractedIdentifiers || [];
-    jsonResult.osint_location = jsonResult.osint_location || "Internacional";
-    jsonResult.reasoning = jsonResult.reasoning || "Análisis procesado.";
 
+    jsonResult.explanations = (jsonResult.explanations || jsonResult.explicaciones || []).map(exp => ({
+      icon: exp.icon || exp.icono || "🔍",
+      title: exp.title || exp.titulo || "Detalle",
+      description: exp.description || exp.descripcion || ""
+    }));
+
+    jsonResult.flaggedWords = jsonResult.flaggedWords || jsonResult.palabras_clave || [];
+    jsonResult.extractedIdentifiers = jsonResult.extractedIdentifiers || jsonResult.identificadores || [];
+    jsonResult.osint_location = jsonResult.osint_location || jsonResult.ubicacion || "Internacional";
+    jsonResult.reasoning = jsonResult.reasoning || jsonResult.razonamiento || "Análisis procesado correctamente.";
+
+    // Forzar consistencia lógica de niveles
     if (jsonResult.score >= 70) jsonResult.level = 'ALTO';
     else if (jsonResult.score >= 40) jsonResult.level = 'MEDIO';
     else jsonResult.level = 'BAJO';
 
+    // Actualizar estadísticas y memoria colectiva
     await updateOnAnalysis(jsonResult);
-    
-    console.log(`[${requestId}] Completado: score=${jsonResult.score}, level=${jsonResult.level}`);
+
     return res.status(200).json(jsonResult);
     
   } catch (error) {
-    console.error(`[${requestId}] Error:`, error.message);
-    return res.status(500).json({ error: 'Fallo al analizar.', details: error.message });
+    console.error('❌ Error en /api/analyze:', error);
+    
+    let errorMsg = error.message || 'Error desconocido';
+    let statusCode = 500;
+
+    if (errorMsg.includes('413') || errorMsg.toLowerCase().includes('too large')) {
+      errorMsg = 'Las imágenes son demasiado pesadas para la IA. Intenta con menos capturas o imágenes más pequeñas.';
+      statusCode = 413;
+    } else if (errorMsg.includes('429')) {
+      errorMsg = 'Límite de velocidad alcanzado (Rate Limit). Espera unos segundos e intenta de nuevo.';
+      statusCode = 429;
+    }
+    
+    return res.status(statusCode).json({ 
+      error: 'Fallo al procesar el análisis con IA. Verifica logs o intenta de nuevo.',
+      details: errorMsg,
+      isVisionError: hasImages
+    });
   }
 });
 
-// ============================================
-// API: /api/report-victim
-// ============================================
 app.post('/api/report-victim', async (req, res) => {
   const { phone, handle, location } = req.body;
   
   if (!phone && !handle) {
-    return res.status(400).json({ error: 'Faltan datos' });
+    return res.status(400).json({ error: 'Faltan datos para el reporte' });
   }
 
   const db = await loadDB();
@@ -306,42 +355,64 @@ app.post('/api/report-victim', async (req, res) => {
   res.json({ success: true });
 });
 
-// ============================================
-// API: /api/stats
-// ============================================
 app.get('/api/stats', async (req, res) => {
   const db = await loadDB();
-  res.json({ totalAnalyses: db.totalAnalyses || 0, scamsDetected: db.scamsDetected || 0 });
+  res.json({
+    totalAnalyses: db.totalAnalyses || 0,
+    scamsDetected: db.scamsDetected || 0
+  });
 });
 
-// ============================================
-// API: /api/recent
-// ============================================
 app.get('/api/recent', async (req, res) => {
   const db = await loadDB();
   res.json(db.recentScams || []);
 });
 
-// ============================================
-// API: /api/status
-// ============================================
 app.get('/api/status', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', message: 'Robert AI Vision & Memory Backend funcionando' });
 });
 
-// ============================================
-// STATIC FILES
-// ============================================
+// Sirve archivos críticos explícitamente para SEO y Google AdSense
+app.get('/ads.txt', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/ads.txt'));
+});
+app.get('/robots.txt', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/robots.txt'));
+});
+app.get('/sitemap.xml', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/sitemap.xml'));
+});
+
+// Rutas explícitas para las páginas de información
+app.get('/how-it-works', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/how-it-works.html'));
+});
+app.get('/faq', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/faq.html'));
+});
+app.get('/about', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/about.html'));
+});
+
+// Rutas explícitas para las páginas legales requeridas por Google AdSense
+app.get('/privacy-policy', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/privacy.html'));
+});
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/terms.html'));
+});
+app.get('/cookies', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/cookies.html'));
+});
+
+// Sirve los archivos estáticos construidos por Vite
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// Fallback
+// Redirige cualquier otra ruta al index.html (para que recargar la página funcione)
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
-// ============================================
-// SERVER
-// ============================================
 app.listen(port, () => {
-  console.log(`🤖 Robert Backend Server running en puerto ${port}`);
+  console.log(`🤖 Robert Backend Server running en el puerto ${port}`);
 });

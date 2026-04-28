@@ -130,11 +130,10 @@
         <div class="input-container" id="input-container">
           <!-- ... existing tabs ... -->
           <div class="input-tabs">
-            <!-- Pestaña de imágenes deshabilitada temporalmente por error en Groq Vision -->
-            <!-- <button class="input-tab active" data-tab="images" id="tab-images"> -->
-            <!--   📸 Capturas -->
-            <!-- </button> -->
-            <button class="input-tab active" data-tab="link" id="tab-link">
+            <button class="input-tab active" data-tab="images" id="tab-images">
+              📸 Capturas
+            </button>
+            <button class="input-tab" data-tab="link" id="tab-link">
               📝 Texto o Link
             </button>
             <button class="input-tab tab-victim" data-tab="victim" id="tab-victim">
@@ -149,8 +148,7 @@
             ></textarea>
             <span id="char-count" class="char-count">0 / 3,000</span>
           </div>
-          <!-- Sección de imágenes ocultada temporalmente por error en Groq Vision -->
-          <div class="image-upload-wrapper" id="image-upload-wrapper" style="display: none;">
+          <div class="image-upload-wrapper" id="image-upload-wrapper">
             <label for="image-upload" class="upload-area" id="upload-area">
               <span class="upload-icon">📸</span>
               <span class="upload-text">Toca aquí para seleccionar hasta 6 capturas de pantalla</span>
