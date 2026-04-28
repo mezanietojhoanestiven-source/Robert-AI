@@ -1,5 +1,13 @@
 node_modules/
 .env
+.env.local
+.env.*.local
 dist/
 .DS_Store
 server/scammers.json
+server/robert.db
+server/server.log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
