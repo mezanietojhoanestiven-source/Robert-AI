@@ -6,25 +6,157 @@
   <title>Política de Cookies | Robert: Detector de Estafas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    body { padding-top: 100px; background-color: var(--bg-dark); }
-    .legal-container { max-width: 800px; margin: 0 auto; padding: 40px 20px; color: var(--text-primary); }
-    h1 { font-size: 2.5rem; margin-bottom: 20px; color: var(--primary-light); }
-    h2 { font-size: 1.5rem; margin-top: 30px; margin-bottom: 15px; color: var(--accent-color); }
-    p, li { margin-bottom: 15px; line-height: 1.6; color: var(--text-secondary); }
-    ul { padding-left: 20px; margin-bottom: 20px; }
+    :root {
+      --bg-dark: #0a0a0f;
+      --bg-card: rgba(20, 20, 25, 0.7);
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --primary-color: #00ffc8;
+      --accent-color: #b538ff;
+      --border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+    }
+
+    #main-header {
+      background: rgba(10, 10, 15, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      gap: 12px;
+    }
+
+    .logo-image {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0, 255, 200, 0.4);
+    }
+
+    .logo h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .logo-subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .legal-container {
+      max-width: 800px;
+      margin: 120px auto 60px;
+      padding: 40px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    }
+
+    @media (max-width: 768px) {
+      .legal-container {
+        margin: 100px 15px 40px;
+        padding: 25px;
+      }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-top: 0;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #fff, var(--text-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .last-updated {
+      color: var(--primary-color);
+      font-weight: 500;
+      margin-bottom: 40px;
+      font-size: 0.95rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 40px;
+      margin-bottom: 15px;
+      color: var(--accent-color);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    p { margin-bottom: 15px; color: var(--text-secondary); }
+    ul { padding-left: 20px; margin-bottom: 20px; color: var(--text-secondary); }
+    li { margin-bottom: 8px; }
+    strong { color: var(--text-primary); }
+
+    a { color: var(--primary-color); text-decoration: none; transition: 0.2s; }
+    a:hover { color: var(--accent-color); text-decoration: underline; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+      color: #000 !important;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 700;
+      display: inline-block;
+      text-decoration: none !important;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 255, 200, 0.3);
+    }
   </style>
 </head>
 <body>
   <header id="main-header">
     <div class="header-content">
-      <a href="/" class="logo" style="text-decoration: none;">
+      <a href="/" class="logo">
         <img src="/logo.png" alt="Robert Logo" class="logo-image">
         <div class="logo-text">
           <h1>Robert</h1>
-          <span class="logo-subtitle">Detector de Estafas</span>
+          <div class="logo-subtitle">Detector de Estafas</div>
         </div>
       </a>
     </div>
@@ -32,30 +164,30 @@
 
   <main class="legal-container">
     <h1>Política de Cookies</h1>
-    <p>Última actualización: 28 de Abril de 2026</p>
+    <p class="last-updated">Última actualización: 28 de Abril de 2026</p>
 
     <h2>1. ¿Qué son las cookies?</h2>
-    <p>Las cookies son pequeños archivos de texto que los sitios web almacenan en su ordenador, dispositivo móvil o navegador de red. Estos archivos permiten que el sitio web o el sistema publicitario reconozcan su dispositivo y recuerden cierta información o mantengan sesiones estables.</p>
+    <p>Las cookies son pequeños archivos de texto informativos que los sitios web almacenan en su ordenador, dispositivo móvil o navegador de red. Estos archivos permiten que el ecosistema subyacente reconozca su dispositivo para recordar variables de entorno importantes.</p>
 
     <h2>2. ¿Para qué usamos cookies en Robert?</h2>
-    <p>En este sitio usamos cookies con dos fines principales:</p>
+    <p>En este sitio de seguridad comunitaria habilitamos el uso de cookies con dos propósitos primarios:</p>
     <ul>
-      <li><strong>Funcionamiento esencial:</strong> Si bien no requerimos que te "loguees", usamos cookies menores para manejar estados (por ejemplo si superas la cuota de análisis permitido - <i>Rate Limiting</i>).</li>
-      <li><strong>Red de Publicidad AdSense:</strong> Usamos Google AdSense para generar ingresos vitales para financiar el consumo de nuestros modelos de IA, permitiendo que la herramienta siga siendo gratuita.</li>
+      <li><strong>Funcionamiento esencial y control antivandalismo:</strong> Para prevenir el abuso automático de la IA (bots), usamos cookies menores y almacenamiento local transitorio que contabiliza cuántas consultas generas por límite de tiempo.</li>
+      <li><strong>Red de Publicidad AdSense:</strong> Nuestra gratuidad se sostiene totalmente gracias a bloques publicitarios patrocinados integrados por la red inteligente de Google AdSense.</li>
     </ul>
 
-    <h2>3. Cookies de socios publicitarios (Google AdSense)</h2>
-    <p>Proveedores de terceros, incluido Google, utilizan cookies para mostrar anuncios relevantes basándose en las visitas anteriores de un usuario a nuestro sitio web o a otros sitios web.</p>
+    <h2>3. Cookies de la red de Partners y AdSense</h2>
+    <p>Google y sus redes de partners proveedores externos recurren a cookies para perfilar y mostrar piezas publicitarias visuales contextuales, alineadas al historial de navegación que tienes como usuario frecuente del Internet global.</p>
     <ul>
-      <li>El uso de cookies de publicidad permite a Google y a sus socios mostrar anuncios basados en tu visita a nuestros sitios y a otros sitios de Internet.</li>
-      <li>Los usuarios pueden inhabilitar la publicidad personalizada. Para ello, deberán acceder a <a href="https://www.google.com/settings/ads" target="_blank" rel="nofollow" style="color:var(--primary-color);">Configuración de anuncios de Google</a>.</li>
+      <li>Para ejecutar este proceso ordenado, se cruzan las métricas de visitas a nuestra plataforma con la base publicitaria maestra.</li>
+      <li>Tienes absoluto derecho tecnológico a inhabilitar cualquier publicidad de carácter personalizado desde adentro del ecosistema de tu navegador. Para ello, como usuario de la web, deberás acceder manualmente a tu <a href="https://www.google.com/settings/ads" target="_blank" rel="nofollow">Configuración de anuncios de Google</a>.</li>
     </ul>
 
-    <h2>4. ¿Cómo administrarlas?</h2>
-    <p>Puedes desactivar las cookies en tu ordenador modificando las preferencias de tu navegador o utilizar extensiones que limiten el seguimiento; sin embargo, no interferiremos ni forzaremos a la negación debido a que mantener la publicidad activa es lo que le da vida a <strong>Robert - Detector de Estafas</strong> de cara a los usuarios latinoamericanos que lo necesitan.</p>
+    <h2>4. Opciones para administrarlas localmente</h2>
+    <p>Puedes desactivar las cookies indiscriminadamente modificando la configuración interna y escudos de privacidad de navegadores como Firefox, Brave, Safari o Chrome; no obstante, te invitamos a mantener las opciones publicitarias estándar. Mantener los anuncios en visualización es la donación indirecta de tu parte que garantiza que <strong>Robert AI</strong> pueda seguir operando sin exigir modelo de suscripción.</p>
 
     <div style="margin-top: 50px; text-align: center;">
-      <a href="/" class="btn-primary" style="display:inline-block; text-decoration:none;">Volver al Inicio</a>
+      <a href="/" class="btn-primary">Volver al Inicio</a>
     </div>
   </main>
 </body>

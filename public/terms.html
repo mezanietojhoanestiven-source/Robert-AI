@@ -6,25 +6,157 @@
   <title>Términos y Condiciones | Robert: Detector de Estafas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    body { padding-top: 100px; background-color: var(--bg-dark); }
-    .legal-container { max-width: 800px; margin: 0 auto; padding: 40px 20px; color: var(--text-primary); }
-    h1 { font-size: 2.5rem; margin-bottom: 20px; color: var(--primary-light); }
-    h2 { font-size: 1.5rem; margin-top: 30px; margin-bottom: 15px; color: var(--accent-color); }
-    p, li { margin-bottom: 15px; line-height: 1.6; color: var(--text-secondary); }
-    ul { padding-left: 20px; margin-bottom: 20px; }
+    :root {
+      --bg-dark: #0a0a0f;
+      --bg-card: rgba(20, 20, 25, 0.7);
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --primary-color: #00ffc8;
+      --accent-color: #b538ff;
+      --border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+    }
+
+    #main-header {
+      background: rgba(10, 10, 15, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      gap: 12px;
+    }
+
+    .logo-image {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0, 255, 200, 0.4);
+    }
+
+    .logo h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .logo-subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .legal-container {
+      max-width: 800px;
+      margin: 120px auto 60px;
+      padding: 40px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    }
+
+    @media (max-width: 768px) {
+      .legal-container {
+        margin: 100px 15px 40px;
+        padding: 25px;
+      }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-top: 0;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #fff, var(--text-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .last-updated {
+      color: var(--primary-color);
+      font-weight: 500;
+      margin-bottom: 40px;
+      font-size: 0.95rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 40px;
+      margin-bottom: 15px;
+      color: var(--accent-color);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    p { margin-bottom: 15px; color: var(--text-secondary); }
+    ul { padding-left: 20px; margin-bottom: 20px; color: var(--text-secondary); }
+    li { margin-bottom: 8px; }
+    strong { color: var(--text-primary); }
+
+    a { color: var(--primary-color); text-decoration: none; transition: 0.2s; }
+    a:hover { color: var(--accent-color); text-decoration: underline; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+      color: #000 !important;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 700;
+      display: inline-block;
+      text-decoration: none !important;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 255, 200, 0.3);
+    }
   </style>
 </head>
 <body>
   <header id="main-header">
     <div class="header-content">
-      <a href="/" class="logo" style="text-decoration: none;">
+      <a href="/" class="logo">
         <img src="/logo.png" alt="Robert Logo" class="logo-image">
         <div class="logo-text">
           <h1>Robert</h1>
-          <span class="logo-subtitle">Detector de Estafas</span>
+          <div class="logo-subtitle">Detector de Estafas</div>
         </div>
       </a>
     </div>
@@ -32,34 +164,34 @@
 
   <main class="legal-container">
     <h1>Términos y Condiciones</h1>
-    <p>Última actualización: 28 de Abril de 2026</p>
+    <p class="last-updated">Última actualización: 28 de Abril de 2026</p>
 
     <h2>1. Aceptación de los Términos</h2>
-    <p>Al acceder y utilizar <strong>Robert - Detector de Estafas</strong>, aceptas estar sujeto por estos Términos y Condiciones, así como a las leyes y regulaciones aplicables. Si no estás de acuerdo con estos términos, no debes usar la plataforma.</p>
+    <p>Al acceder y utilizar <strong>Robert - Detector de Estafas</strong>, aceptas estar sujeto por estos Términos y Condiciones, así como a las leyes y regulaciones aplicables. Si no estás de acuerdo con estos términos, te solicitamos amablemente que no utilices la plataforma.</p>
 
     <h2>2. Uso del Servicio</h2>
-    <p>Robert provee una funcionalidad de Inteligencia Artificial para el análisis lingüístico y visual buscando posibles amenazas. Al usar el servicio:</p>
+    <p>Robert provee una funcionalidad de Inteligencia Artificial para el análisis lingüístico y visual buscando posibles amenazas. Al usar el servicio te comprometes a los siguientes parámetros de convivencia:</p>
     <ul>
-      <li>No debes usar el mismo para fines ilegales.</li>
-      <li>No automatizarás peticiones para realizar ataques o agotar las cuotas de la IA.</li>
-      <li>Garantizas que los textos o capturas de pantallas que subes no infligen derechos de autor de terceros o revelan contraseñas privadas sensibles de las cuales podrías ser afectado.</li>
+      <li>No usar la plataforma para fines ilegales o actos criminales cibernéticos.</li>
+      <li>No automatizar peticiones a través de bots o scripts ajenos con la intención de realizar ataques de denegación de servicio o agotar las cuotas de la IA de forma artificial.</li>
+      <li>Al subir material a la plataforma, garantizas que las capturas de pantallas no infligen derechos de privacidad graves de terceros que violen la ley general, ni incluyen material de exposición íntima ajeno a la estafa reportada.</li>
     </ul>
 
-    <h2>3. Naturaleza Consultiva de la Plataforma (No Infalibilidad)</h2>
-    <p><strong>Aviso Importante:</strong> Los análisis emitidos por la Inteligencia Artificial (score de riesgo, predicciones) se ofrecen a modo "orientativo" y educativo. Robert usa tecnología avanzada de lenguaje pero <strong>no es un ente legal absoluto</strong>.</p>
-    <p>Bajo ningún punto nos responsabilizamos por decisiones financieras, transferencias bancarias aprobadas o mermadas basadas en la evaluación del sistema.</p>
+    <h2>3. Naturaleza Consultiva de la Plataforma (Software As-Is)</h2>
+    <p><strong>Aviso Importante:</strong> Nuestra tecnología genera predicciones altamente precisas, pero Robert <strong>no es un ente legal absoluto</strong> ni reemplaza el criterio de la autoridad humana.</p>
+    <p>Ofrecemos la tecnología "tal cual" (As-Is). Bajo ningún punto nos responsabilizamos legal ni financieramente por decisiones de vida, como transferencias bancarias completadas o bloqueos ejecutados, basadas unilateralmente en la evaluación de riesgo de la IA de este sitio.</p>
 
     <h2>4. Propiedad Intelectual</h2>
-    <p>Las marcas registradas, el código fuente, la estructuración del contenido, diseño y el logotipo de "Robert: Detector de Estafas" están protegidos de plagio según la Ley. Las publicaciones y reportes generados pueden compartirse con propósitos de información comunitaria y policial.</p>
+    <p>El código fuente principal, la arquitectura visual (diseño), logotipos y flujos algorítmicos son propiedad intelectual del creador y están protegidos contra el plagio desautorizado. Las métricas públicas, reportes de dominios y teléfonos estafadores detectados pueden compartirse libremente con propósitos de información comunitaria y periodística (OSINT).</p>
 
     <h2>5. Modificaciones del Servicio</h2>
-    <p>Nos reservamos el derecho de modificar o discontinuar temporaria o permanentemente el servicio (o cualquier parte del mismo) según los costos de mantenimientos subyacentes o de forma unilateral sin aviso previo.</p>
+    <p>Dado el costo subyacente que acarrea la implementación de IA generativa para análisis masivo, el equipo nos reservamos el derecho explícito de interrumpir y limitar total o parcialmente las consultas por IP o discontinuar la plataforma completa de forma temporal o indefinida sin preaviso estricto.</p>
 
-    <h2>6. Contacto</h2>
-    <p>Para preguntas generales sobre los términos y condiciones, contactanos mediante nuestras plataformas públicas.</p>
+    <h2>6. Métodos de Contacto</h2>
+    <p>Si deseas plantear dudas formales o sugerencias para mejoras, siempre abrimos nuestros canales de contacto en redes sociales integradas directamente a las iniciativas de la plataforma.</p>
 
     <div style="margin-top: 50px; text-align: center;">
-      <a href="/" class="btn-primary" style="display:inline-block; text-decoration:none;">Volver al Inicio</a>
+      <a href="/" class="btn-primary">Volver al Inicio</a>
     </div>
   </main>
 </body>
