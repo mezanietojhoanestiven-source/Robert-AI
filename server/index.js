@@ -374,13 +374,24 @@ app.get('/api/status', (req, res) => {
 
 // Sirve archivos críticos explícitamente para SEO y Google AdSense
 app.get('/ads.txt', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/ads.txt'));
+  res.sendFile(path.join(__dirname, '../dist/ads.txt'));
 });
 app.get('/robots.txt', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/robots.txt'));
+  res.sendFile(path.join(__dirname, '../dist/robots.txt'));
 });
 app.get('/sitemap.xml', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/sitemap.xml'));
+  res.sendFile(path.join(__dirname, '../dist/sitemap.xml'));
+});
+
+// Rutas explícitas para las páginas legales requeridas por Google AdSense
+app.get('/privacy-policy', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/privacy.html'));
+});
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/terms.html'));
+});
+app.get('/cookies', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/cookies.html'));
 });
 
 // Sirve los archivos estáticos construidos por Vite
