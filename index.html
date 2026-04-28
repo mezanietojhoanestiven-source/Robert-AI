@@ -54,10 +54,32 @@
       </div>
       <div class="header-actions">
         <button id="btn-donate" class="btn-outline-glow">❤️ Donar</button>
-        <button id="btn-about" class="btn-outline-glow" style="margin-left: 10px;">👤 Sobre mí</button>
+        <button id="btn-hamburger" class="btn-hamburger" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
   </header>
+
+  <!-- MENÚ LATERAL -->
+  <div id="side-menu-overlay" class="side-menu-overlay hidden"></div>
+  <nav id="side-menu" class="side-menu">
+    <div class="side-menu-header">
+      <img src="/logo.png" alt="Robert" style="width:32px;height:32px;border-radius:50%;">
+      <span style="font-weight:700;font-size:1.1rem;">Robert AI</span>
+      <button id="btn-close-menu" class="btn-close-menu">&times;</button>
+    </div>
+    <ul class="side-menu-links">
+      <li><a href="#hero-section" data-nav>🔍 Analizar Mensaje</a></li>
+      <li><a href="#how-it-works-section" data-nav>⚙️ ¿Cómo funciona?</a></li>
+      <li><a href="#examples-section" data-nav>🕵️ Ejemplos de Estafas</a></li>
+      <li><a href="#faq-section" data-nav>❓ Preguntas Frecuentes</a></li>
+      <li><a href="#about-section" data-nav>👤 Sobre Nosotros</a></li>
+      <li><a href="/privacy-policy" target="_blank">🔒 Política de Privacidad</a></li>
+      <li><a href="/terms" target="_blank">📄 Términos y Condiciones</a></li>
+      <li><a href="/cookies" target="_blank">🍪 Política de Cookies</a></li>
+    </ul>
+  </nav>
 
   <!-- ═══════════════════════════════════════════════ -->
   <!-- HERO / INPUT SECTION                            -->
@@ -323,7 +345,7 @@
     </section>
 
     <!-- ESPACIO PUBLICITARIO 1 (Debajo del buscador) -->
-    <div class="ad-container" style="text-align: center; margin: 20px auto; width: 100%; max-width: 728px; min-height: 90px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+    <div id="ad-container-1" class="ad-container" style="text-align: center; margin: 20px auto; width: 100%; max-width: 728px; min-height: 90px; background: rgba(255,255,255,0.02); border-radius: 8px;">
       <ins class="adsbygoogle"
            style="display:block"
            data-ad-client="ca-pub-7566072282016933"

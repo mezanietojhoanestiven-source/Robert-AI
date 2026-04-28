@@ -18,6 +18,14 @@ const howItWorksSection = document.getElementById('how-it-works-section');
 const examplesSection   = document.getElementById('examples-section');
 const faqSection        = document.getElementById('faq-section');
 const aboutSection      = document.getElementById('about-section');
+const adContainer1      = document.getElementById('ad-container-1');
+
+// Side Menu
+const btnHamburger      = document.getElementById('btn-hamburger');
+const btnCloseMenu      = document.getElementById('btn-close-menu');
+const sideMenu          = document.getElementById('side-menu');
+const sideMenuOverlay   = document.getElementById('side-menu-overlay');
+const sideMenuLinks     = document.querySelectorAll('.side-menu-links a');
 
 const messageInput      = document.getElementById('message-input');
 const charCount         = document.getElementById('char-count');
@@ -148,12 +156,31 @@ function bindEvents() {
   const aboutModal = document.getElementById('about-modal');
   const donateModal = document.getElementById('donate-modal');
   
-  if (btnAbout) {
-    btnAbout.addEventListener('click', () => {
-      const target = document.getElementById('about-section');
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
+  // ═══ SIDE MENU LOGIC ═══
+  const toggleMenu = (open) => {
+    sideMenu.classList.toggle('open', open);
+    sideMenuOverlay.classList.toggle('hidden', !open);
+    document.body.style.overflow = open ? 'hidden' : 'auto';
+  };
+
+  btnHamburger?.addEventListener('click', () => toggleMenu(true));
+  btnCloseMenu?.addEventListener('click', () => toggleMenu(false));
+  sideMenuOverlay?.addEventListener('click', () => toggleMenu(false));
+
+  sideMenuLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      const isInternal = link.hasAttribute('data-nav');
+      if (isInternal) {
+        e.preventDefault();
+        const targetId = link.getAttribute('href').substring(1);
+        const targetElement = document.getElementById(targetId);
+        toggleMenu(false);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
     });
-  }
+  });
   
   if (btnDonate && donateModal) {
     btnDonate.addEventListener('click', () => donateModal.classList.remove('hidden'));
@@ -365,8 +392,9 @@ async function startVictimOsint() {
   if (examplesSection) examplesSection.classList.add('hidden');
   if (faqSection) faqSection.classList.add('hidden');
   if (aboutSection) aboutSection.classList.add('hidden');
+  if (adContainer1) adContainer1.classList.add('hidden');
   loadingSection.classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'instant' });
   
   // Reset progress bar and loading steps
   progressBar.style.width = '0%';
@@ -1011,6 +1039,7 @@ function resetToHome() {
   if (examplesSection) examplesSection.classList.remove('hidden');
   if (faqSection) faqSection.classList.remove('hidden');
   if (aboutSection) aboutSection.classList.remove('hidden');
+  if (adContainer1) adContainer1.classList.remove('hidden');
   
   // Limpiar inputs de texto
   messageInput.value = '';
