@@ -344,9 +344,10 @@ async function startVictimOsint() {
   heroSection.classList.add('hidden');
   loadingSection.classList.remove('hidden');
   
-  // Reset progress bar
+  // Reset progress bar and loading steps
   progressBar.style.width = '0%';
   loadingPercent.textContent = '0%';
+  document.querySelectorAll('.loading-step').forEach(s => s.classList.remove('active', 'done'));
 
   const loadingTitle = document.querySelector('.loading-title');
   if (loadingTitle) loadingTitle.textContent = 'Analizando metadatos EXIF y prefijos telefónicos…';
@@ -585,9 +586,10 @@ async function startAnalysis() {
   resultSection.classList.add('hidden');
   safeSection.classList.add('hidden');
 
-  // Reset progress bar
+  // Reset progress bar and loading steps
   progressBar.style.width = '0%';
   loadingPercent.textContent = '0%';
+  document.querySelectorAll('.loading-step').forEach(s => s.classList.remove('active', 'done'));
 
   // Reset loading title and steps for standard analysis
   const loadingTitle = document.querySelector('.loading-title');
@@ -971,6 +973,12 @@ function resetToHome() {
   }
 
   currentResult = null;
+  
+  // Limpiar estados de carga
+  progressBar.style.width = '0%';
+  loadingPercent.textContent = '0%';
+  document.querySelectorAll('.loading-step').forEach(s => s.classList.remove('active', 'done'));
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
