@@ -175,8 +175,8 @@ app.post('/api/analyze', async (req, res) => {
 
   // ─── CONSTRUCCIÓN DEL PROMPT MULTIMODAL ───
   const hasImages = images && images.length > 0;
-  // Usamos Llama 3.2 Vision para imágenes y Llama 3.3 para texto puro (Modelos reales de Groq)
-  const modelToUse = hasImages ? 'llama-3.2-11b-vision-preview' : 'llama-3.3-70b-versatile';
+  // Usamos Llama 4 Scout para imágenes (reemplazo oficial de llama-3.2-11b-vision-preview) y Llama 3.3 para texto puro
+  const modelToUse = hasImages ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
   
   const systemPrompt = getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : "");
   
