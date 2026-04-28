@@ -175,8 +175,8 @@ app.post('/api/analyze', async (req, res) => {
 
   // ─── CONSTRUCCIÓN DEL PROMPT MULTIMODAL ───
   const hasImages = images && images.length > 0;
-  // Llama 4 Scout es el único modelo con soporte multimodal en Groq
-  const modelToUse = hasImages ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
+  // IMPORTANTE: Groq ya no soporta el modelo de visión, usamos solo texto
+  const modelToUse = 'llama-3.3-70b-versatile';
   
   const systemPrompt = getSystemPrompt(matchFound ? `OJO: EL IDENTIFICADOR "${matchingIdentifier}" YA ESTÁ EN LA LISTA NEGRA. ESTO ES UNA ESTAFA CONFIRMADA.` : "");
   
@@ -207,16 +207,9 @@ app.post('/api/analyze', async (req, res) => {
   
   userContent.push({ type: 'text', text: textPrompt });
 
-  // Agregar imágenes si existen
-  if (hasImages) {
-    images.forEach((imgBase64) => {
-      const url = imgBase64.startsWith('data:') ? imgBase64 : `data:image/png;base64,${imgBase64}`;
-      userContent.push({
-        type: 'image_url',
-        image_url: { url: url }
-      });
-    });
-  }
+  // IMPORTANTE: Ya no enviamos imágenes al modelo de Groq
+  // El OCR se hace en el frontend y solo se envía el texto
+  // if (hasImages) { ... } // Eliminado
 
   // Recordatorio final para forzar el formato
   const jsonHint = `\n\nResponde EXCLUSIVAMENTE con el objeto JSON siguiendo esta estructura:
